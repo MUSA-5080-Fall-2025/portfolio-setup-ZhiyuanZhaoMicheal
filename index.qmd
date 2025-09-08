@@ -1,5 +1,5 @@
 ---
-title: "MUSA 5080 Portfolio"
+title: "Zhiyuan Portfolio"
 ---
 
 # Welcome to My Portfolio
@@ -18,5 +18,5 @@ Advanced spatial analysis and data science for urban planning and public policy.
 [Students will customize this section]
 
 ## Contact
-- Email: [your.email@upenn.edu]
-- GitHub: [@your-username]
+- Email: [zhao2003@upenn.edu]
+- GitHub: [@zhaozhiyuanmichael]
