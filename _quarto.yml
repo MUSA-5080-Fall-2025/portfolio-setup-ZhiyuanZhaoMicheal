@@ -18,6 +18,7 @@ website:
           - text: Lab 0
           - href: Labs/Lab0/lab0_template.qmd
           - text: Lab 1
+          - href: Labs/Lab1/assignment1_template.qmd
 
 format:
   html:
