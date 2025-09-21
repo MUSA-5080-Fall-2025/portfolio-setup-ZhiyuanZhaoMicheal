@@ -1,0 +1,37 @@
+---
+title: "Week 2 Notes - Algorithmic Decision Making & Census Data"
+date: "2025-09-15"
+---
+
+## Key Concepts Learned
+-  Algorithm：A set of rules or instructions for solving a problem or completing a task
+- Data Science → Computer science/engineering focus on algorithms and methods
+- Data Analytics → Application of data science methods to other disciplines
+- Machine Learning → Algorithms for classification & prediction that learn from data
+- AI → Algorithms that adjust and improve across iterations (neural networks, etc.)
+- Decennial Census (2020): Everyone counted every 10 years; 9 basic questions: age, race, sex, housing; Constitutional requirement; Determines political representation
+- American Community Survey (ACS): 3% of households surveyed annually;Detailed questions: income, education, employment, housing costs; Replaced the old “long form” in 2005; A big source of data we’ll use this semester
+
+## Coding Techniques
+- Data Cleaning Essentials: str_remove(), str_extract(), str_replace()
+- case_when() for categories, MOE calculations
+- kable() for professional formatting
+
+## Questions & Challenges
+- need more coding practice
+
+## Connections to Policy
+- Algorithmic decision making is especially appealing because it promises:
+Efficiency - process more cases faster
+Consistency - same rules applied to everyone
+Objectivity - removes human bias
+Cost savings - fewer staff needed
+- Algorithmic fairness: Unreliable data can bias automated decisions
+Resource allocation: Know which areas need extra attention
+Equity analysis: Some communities may be systematically under-counted
+Professional credibility: Always assess your data quality
+This connects directly to our algorithmic bias discussion
+
+## Reflection
+- [What was most interesting]
+- [How I'll apply this knowledge]

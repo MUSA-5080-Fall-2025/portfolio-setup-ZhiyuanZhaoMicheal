@@ -1,8 +1,8 @@
 ---
 title: "Assignment 1: Census Data Quality for Policy Decisions"
 subtitle: "Evaluating Data Reliability for Algorithmic Decision-Making"
-author: "Your Name Here"
-date: today
+author: "Zhiyuan Zhao"
+date: 2025/09/18
 format: 
   html:
     code-fold: false
@@ -51,11 +51,16 @@ If there is a special character like comma, you need use double quote mark so th
 # Setup
 
 ```{r setup}
+
 # Load required packages (hint: you need tidycensus, tidyverse, and knitr)
-
+library(tidycensus)
+library(tidyverse)
+library(knitr)
 # Set your Census API key
-
+census_api_key("a8081579173d9c4b9d21b9265f9c67c8708d6a02")
 # Choose your state for analysis - assign it to a variable called my_state
+my_state <- "Pennsylvania"
+
 ```
 
 **State Selection:** I have chosen **[Your State Name]** for this analysis because: [Brief explanation of why you chose this state]
@@ -77,11 +82,44 @@ If there is a special character like comma, you need use double quote mark so th
 
 ```{r county-data}
 # Write your get_acs() code here
+state_pop <- get_acs(
+  geography = "state",
+  variables = "B01003_001",  # Total population
+  year = 2022,
+  survey = "acs5"
+)
+median_income  <- get_acs(
+  geography = "state",
+  variables = "B19013_001",  # Total population
+  year = 2022,
+  survey = "acs5"
+)
 
+glimpse(state_pop)
+pa_data <- get_acs(
+  geography = "county",
+  variables = c(
+    total_pop = "B01003_001",
+    median_income = "B19013_001"
+  ),
+  state = "PA",
+  year = 2022,
+  output = "wide"  # Makes analysis easier
+)
+
+head(pa_data)
 # Clean the county names to remove state name and "County" 
-# Hint: use mutate() with str_remove()
 
+# Hint: use mutate() with str_remove()
+pa_clean <- pa_data %>%
+  mutate(
+    # Remove state name from county names
+    county_name = str_remove(NAME, ", Pennsylvania"),
+    # Remove "County" word
+    county_name = str_remove(county_name, " County")
+  )
 # Display the first few rows
+head(pa_clean)
 ```
 
 ## 2.2 Data Quality Assessment
@@ -100,9 +138,30 @@ If there is a special character like comma, you need use double quote mark so th
 
 ```{r income-reliability}
 # Calculate MOE percentage and reliability categories using mutate()
+select(pa_clean, NAME, county_name)
+
+pa_reliability <- pa_clean %>%
+  mutate(
+    # Calculate MOE as percentage of estimate
+    moe_percentage = round((median_incomeM / median_incomeE) * 100, 2),
+    
+    # Create reliability categories
+    reliability = case_when(
+      moe_percentage < 5 ~ "High Confidence",
+      moe_percentage >= 5 & moe_percentage <= 10 ~ "Moderate",
+      moe_percentage > 10 ~ "Low Confidence"
+    )
+  )
+
 
 # Create a summary showing count of counties in each reliability category
 # Hint: use count() and mutate() to add percentages
+pa_reliability_summary <- pa_reliability %>%
+  count(reliability) %>%
+  mutate(percent = n / sum(n) * 100)
+
+pa_reliability_summary
+
 ```
 
 ## 2.3 High Uncertainty Counties
@@ -118,9 +177,22 @@ If there is a special character like comma, you need use double quote mark so th
 **Hint:** Use `arrange()`, `slice()`, and `select()` functions.
 
 ```{r high-uncertainty}
-# Create table of top 5 counties by MOE percentage
+top5_uncertain <- pa_reliability %>%
+  arrange(desc(moe_percentage)) %>%
+  slice(1:5) %>%
+  select(
+    County = county_name,
+    `Median Income` = median_incomeE,
+    `Margin of Error` = median_incomeM,
+    `MOE (%)` = moe_percentage,
+    Reliability = reliability
+  )
 
-# Format as table with kable() - include appropriate column names and caption
+kable(
+  top5_uncertain,
+  digits = 2,
+  caption = "Top 5 Pennsylvania Counties with Highest Income Estimate Uncertainty"
+)
 ```
 
 **Data Quality Commentary:**
@@ -138,9 +210,14 @@ If there is a special character like comma, you need use double quote mark so th
 ```{r select-counties}
 # Use filter() to select 2-3 counties from your county_reliability data
 # Store the selected counties in a variable called selected_counties
+selected_counties <- pa_reliability %>%
+ filter(county_name %in% c("Allegheny", "Elk")) %>%
+  select(county_name, median_incomeE, reliability, moe_percentage)
+
 
 # Display the selected counties with their key characteristics
 # Show: county name, median income, MOE percentage, reliability category
+selected_counties
 ```
 
 **Comment on the output:** [write something :)]
@@ -158,14 +235,39 @@ If there is a special character like comma, you need use double quote mark so th
 
 ```{r tract-demographics}
 # Define your race/ethnicity variables with descriptive names
-
+race_vars <- c(
+  total_pop = "B03002_001",
+  white = "B03002_003",
+  black = "B03002_004",
+  hispanic = "B03002_012"
+)
 # Use get_acs() to retrieve tract-level data
 # Hint: You may need to specify county codes in the county parameter
-
+tract_data <- get_acs(
+  geography = "tract",
+  state = "PA",
+  county = c("003", "047"),  # Selected county GEOIDs
+  variables = race_vars,
+  year = 2022,
+  survey = "acs5",
+  output = "wide"
+)
 # Calculate percentage of each group using mutate()
+tract_data <- tract_data %>%
+  mutate(
+    pct_white = round((whiteE / total_popE) * 100, 2),
+    pct_black = round((blackE / total_popE) * 100, 2),
+    pct_hispanic = round((hispanicE / total_popE) * 100, 2)
+  )
 # Create percentages for white, Black, and Hispanic populations
 
 # Add readable tract and county name columns using str_extract() or similar
+tract_data <- tract_data %>%
+  mutate(
+    tract_name = str_extract(NAME, "Tract [0-9\\.]+"),
+    county_name = str_replace(NAME, " Tract [0-9\\.]+, Pennsylvania", "")
+  )
+head(tract_data)
 ```
 
 ## 3.3 Demographic Analysis
@@ -175,11 +277,32 @@ If there is a special character like comma, you need use double quote mark so th
 ```{r demographic-analysis}
 # Find the tract with the highest percentage of Hispanic/Latino residents
 # Hint: use arrange() and slice() to get the top tract
+top_hispanic_tract <- tract_data %>%
+  arrange(desc(pct_hispanic)) %>%
+  slice(1) %>%
+  select(county_name, tract_name, pct_hispanic)
 
+top_hispanic_tract
 # Calculate average demographics by county using group_by() and summarize()
-# Show: number of tracts, average percentage for each racial/ethnic group
+county_summary <- tract_data %>%
+  filter(substr(GEOID, 1, 5) %in% c("42003", "42047")) %>%  
+  group_by(county_geoid = substr(GEOID, 1, 5)) %>%          
+  summarize(
+    county_name = first(county_name),                        
+    n_tracts = n(),                                        
+    avg_pct_white = round(mean(pct_white, na.rm = TRUE), 2),
+    avg_pct_black = round(mean(pct_black, na.rm = TRUE), 2),
+    avg_pct_hispanic = round(mean(pct_hispanic, na.rm = TRUE), 2),
+    .groups = "drop"
+  )
 
+# Show: number of tracts, average percentage for each racial/ethnic group
 # Create a nicely formatted table of your results using kable()
+kable(
+  county_summary,
+  caption = "Average Tract-Level Demographics by Selected County",
+  digits = 2
+)
 ```
 
 # Part 4: Comprehensive Data Quality Evaluation
