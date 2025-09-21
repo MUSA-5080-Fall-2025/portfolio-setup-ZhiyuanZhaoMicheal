@@ -34,4 +34,4 @@ This connects directly to our algorithmic bias discussion
 
 ## Reflection
 - [What was most interesting]
-- [How I'll apply this knowledge]
+Exploring algorithm bias
