@@ -319,11 +319,49 @@ kable(
 ```{r demographic-moe}
 # Calculate MOE percentages for white, Black, and Hispanic variables
 # Hint: use the same formula as before (margin/estimate * 100)
-
+tract_data <- tract_data %>%
+  mutate(
+    moe_pct_white = ifelse(whiteE > 0, round((whiteM / whiteE) * 100, 2), NA),
+    moe_pct_black = ifelse(blackE > 0, round((blackM / blackE) * 100, 2), NA),
+    moe_pct_hispanic = ifelse(hispanicE > 0, round((hispanicM / hispanicE) * 100, 2), NA)
+  )
 # Create a flag for tracts with high MOE on any demographic variable
 # Use logical operators (| for OR) in an ifelse() statement
+tract_data <- tract_data %>%
+  mutate(
+    high_moe_flag = ifelse(
+      moe_pct_white > 15 | moe_pct_black > 15 | moe_pct_hispanic > 15,
+      1, 0
+    )
+  )
 
 # Create summary statistics showing how many tracts have data quality issues
+moe_summary <- tract_data %>%
+  mutate(county_geoid = substr(GEOID, 1, 5)) %>%
+  filter(county_geoid %in% c("42003", "42047")) %>%
+  group_by(county_geoid) %>%
+  summarize(
+    n_tracts = n(),
+    n_high_moe = sum(high_moe_flag, na.rm = TRUE),
+    pct_high_moe = round((n_high_moe / n_tracts) * 100, 2),
+    avg_moe_white = round(mean(moe_pct_white, na.rm = TRUE), 2),
+    avg_moe_black = round(mean(moe_pct_black, na.rm = TRUE), 2),
+    avg_moe_hispanic = round(mean(moe_pct_hispanic, na.rm = TRUE), 2),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    county_name = case_when(
+      county_geoid == "42003" ~ "Allegheny County",
+      county_geoid == "42047" ~ "Elk County"
+    )
+  ) %>%
+  select(county_name, everything())
+# Nicely formatted summary table
+kable(
+  moe_summary,
+  caption = "Summary of MOE Reliability Issues by County",
+  digits = 2
+)
 ```
 
 ## 4.2 Pattern Analysis
@@ -334,9 +372,32 @@ kable(
 # Group tracts by whether they have high MOE issues
 # Calculate average characteristics for each group:
 # - population size, demographic percentages
-
+pattern_summary <- tract_data %>%
+  filter(substr(GEOID, 1, 5) %in% c("42003", "42047")) %>%
+  group_by(high_moe_flag) %>%
+  summarize(
+    n_tracts = n(),
+    avg_total_pop    = round(mean(total_popE,    na.rm = TRUE), 0),
+    avg_pct_white    = round(mean(pct_white,     na.rm = TRUE), 2),
+    avg_pct_black    = round(mean(pct_black,     na.rm = TRUE), 2),
+    avg_pct_hispanic = round(mean(pct_hispanic,  na.rm = TRUE), 2),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    moe_group = case_when(
+      high_moe_flag == 1 ~ "High MOE Tracts",
+      high_moe_flag == 0 ~ "Low MOE Tracts",
+      is.na(high_moe_flag) ~ "Low MOE Tracts"  # treat NA as Low MOE
+    )
+  ) %>%
+  select(moe_group, everything(), -high_moe_flag)
 # Use group_by() and summarize() to create this comparison
 # Create a professional table showing the patterns
+kable(
+  pattern_summary,
+  caption = "Comparison of Demographic Patterns by Data Quality Group",
+  digits = 2
+)
 ```
 
 **Pattern Analysis:** [Describe any patterns you observe. Do certain types of communities have less reliable data? What might explain this?]
@@ -365,6 +426,18 @@ kable(
 ```{r recommendations-data}
 # Create a summary table using your county reliability data
 # Include: county name, median income, MOE percentage, reliability category
+recommendations_table <- pa_reliability %>%
+  # Add algorithm recommendation based on reliability
+  mutate(
+    algorithm_recommendation = case_when(
+      reliability == "High Confidence" ~ "Safe for algorithmic decisions",
+      reliability == "Moderate"        ~ "Use with caution - monitor outcomes",
+      reliability == "Low Confidence"  ~ "Requires manual review or additional data",
+      TRUE ~ "Unknown"
+    )
+  ) %>%
+  # Keep only the desired columns
+  select(county_name, median_incomeE, moe_percentage, reliability, algorithm_recommendation)
 
 # Add a new column with algorithm recommendations using case_when():
 # - High Confidence: "Safe for algorithmic decisions"
@@ -372,6 +445,11 @@ kable(
 # - Low Confidence: "Requires manual review or additional data"
 
 # Format as a professional table with kable()
+kable(
+  recommendations_table,
+  caption = "Algorithm Implementation Recommendations by County",
+  digits = 2
+)
 ```
 
 **Key Recommendations:**
