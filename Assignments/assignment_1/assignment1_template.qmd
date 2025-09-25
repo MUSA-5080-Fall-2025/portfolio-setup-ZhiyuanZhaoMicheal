@@ -63,7 +63,7 @@ my_state <- "Pennsylvania"
 
 ```
 
-**State Selection:** I have chosen **[Your State Name]** for this analysis because: [Brief explanation of why you chose this state]
+**State Selection:** I have chosen Pennsylvnia for this analysis because: Now I live in philadelpha.
 
 # Part 2: County-Level Resource Assessment
 
@@ -197,7 +197,7 @@ kable(
 
 **Data Quality Commentary:**
 
-[Write 2-3 sentences explaining what these results mean for algorithmic decision-making. Consider: Which counties might be poorly served by algorithms that rely on this income data? What factors might contribute to higher uncertainty?]
+These results show that some counties have considerable uncertainty in their median income estimates. For algorithmic decision-making, relying directly on these values could produce biased resource allocation. Counties with higher MOE may be systematically underestimated or overestimated, which could affect their ability to receive funding or services. Factors contributing to higher uncertainty likely include small population sizes, greater variability in income distributions, or difficulties in collecting survey responses in certain regions.
 
 # Part 3: Neighborhood-Level Analysis
 
@@ -221,6 +221,7 @@ selected_counties
 ```
 
 **Comment on the output:** [write something :)]
+Selecting Allegheny County and Elk County allows for a meaningful comparison across different levels of reliability. Allegheny County, with its large population, produces relatively stable data, while Elk County, with fewer residents and greater income variability, exhibits higher MOE. Comparing these two counties illustrates a broader pattern: larger counties tend to have more reliable data, while smaller or rural counties face greater challenges.
 
 ## 3.2 Tract-Level Demographics
 
@@ -400,7 +401,8 @@ kable(
 )
 ```
 
-**Pattern Analysis:** [Describe any patterns you observe. Do certain types of communities have less reliable data? What might explain this?]
+**Pattern Analysis:**
+The results suggest that tracts with higher MOE tend to have smaller populations and, in some cases, higher proportions of minority residents. This indicates that data quality problems are not randomly distributed but are concentrated in communities that are either less populated or more diverse. Such communities are at risk of being misclassified or overlooked in algorithmic systems due to unreliable data, reinforcing inequities. The root causes likely include small sample sizes, challenges in achieving representative responses, and structural disparities between urban and rural areas.
 
 
 # Part 5: Policy Recommendations
@@ -410,14 +412,14 @@ kable(
 **Your Task:** Write an executive summary that integrates findings from all four analyses.
 
 **Executive Summary Requirements:**
-1. **Overall Pattern Identification**: What are the systematic patterns across all your analyses?
-2. **Equity Assessment**: Which communities face the greatest risk of algorithmic bias based on your findings?
-3. **Root Cause Analysis**: What underlying factors drive both data quality issues and bias risk?
-4. **Strategic Recommendations**: What should the Department implement to address these systematic issues?
+1. **Overall Pattern Identification**: Across the state, larger counties and tracts generally demonstrate higher data reliability, while smaller or less populated areas tend to exhibit higher MOE. This pattern holds for both income and demographic data.
+2. **Equity Assessment**: Communities with low data reliability face the greatest risk of algorithmic bias. Smaller counties and tracts with higher minority populations are particularly vulnerable to being disadvantaged if algorithmic systems undervalue their needs due to measurement uncertainty.
+3. **Root Cause Analysis**: Underlying drivers of these data quality issues include the limitations of sampling design in sparsely populated areas, underrepresentation of minority populations in survey data, and broader geographic disparities in data collection. These structural challenges affect both the accuracy of estimates and the risk of bias when such data informs policy.
+4. **Strategic Recommendations**: For algorithmic implementation, the department should rely more heavily on automated methods in high-confidence regions, apply continuous monitoring and auditing in moderate-confidence regions, and require manual review or supplemental data collection in low-confidence regions. Longer term, efforts should focus on improving representation and data collection practices in underserved communities to reduce systematic inequality in decision-making.
 
 **Executive Summary:**
 
-[Your integrated 4-paragraph summary here]
+This analysis finds that larger counties like Allegheny generally produce reliable ACS estimates, while smaller counties such as Elk often face high margins of error. At the tract level, data uncertainty is more pronounced in low-population and more diverse communities, raising equity concerns if algorithms rely only on point estimates. These reliability gaps are largely driven by small sample sizes and uneven survey representation. To reduce bias, high-confidence areas can safely use algorithmic allocation, moderate-confidence areas require monitoring, and low-confidence areas should include manual review or supplemental data.
 
 ## 6.3 Specific Recommendations
 
@@ -456,32 +458,39 @@ kable(
 
 **Your Task:** Use your analysis results to provide specific guidance to the department.
 
-1. **Counties suitable for immediate algorithmic implementation:** [List counties with high confidence data and explain why they're appropriate]
+1. **Counties suitable for immediate algorithmic implementation:** High-confidence counties, such as Allegheny County, have low error margins and can be safely included in algorithmic decision-making for efficient resource allocation.
 
-2. **Counties requiring additional oversight:** [List counties with moderate confidence data and describe what kind of monitoring would be needed]
+2. **Counties requiring additional oversight:** Counties with moderate confidence can still be included in algorithmic processes, but outcomes should be regularly monitored and audited to ensure no systematic misallocation occurs.
 
-3. **Counties needing alternative approaches:** [List counties with low confidence data and suggest specific alternatives - manual review, additional surveys, etc.]
+3. **Counties needing alternative approaches:** Low-confidence counties, such as Elk County, should not rely solely on algorithms. Instead, these areas require manual review, supplemental surveys, or hybrid decision-making approaches to ensure fair distribution of resources.
 
 ## Questions for Further Investigation
 
-[List 2-3 questions that your analysis raised that you'd like to explore further in future assignments. Consider questions about spatial patterns, time trends, or other demographic factors.]
+1. Are high-MOE tracts geographically clustered (e.g., rural areas, urban peripheries), and how might these spatial patterns affect regional equity in resource allocation?
+2. How has the reliability of ACS estimates changed over time (e.g., 2010–2022), and are some communities experiencing persistent issues with data quality that could systematically disadvantage them?
 
 # Technical Notes
 
 **Data Sources:** 
 - U.S. Census Bureau, American Community Survey 2018-2022 5-Year Estimates
-- Retrieved via tidycensus R package on [date]
+- Retrieved via tidycensus R package on September 18, 2025
 
 **Reproducibility:** 
-- All analysis conducted in R version [your version]
+- All analysis conducted in R version 4.5.1
 - Census API key required for replication
-- Complete code and documentation available at: [your portfolio URL]
+- Complete code and documentation available at: https://musa-5080-fall-2025.github.io/portfolio-setup-ZhiyuanZhaoMicheal/
 
 **Methodology Notes:**
-[Describe any decisions you made about data processing, county selection, or analytical choices that might affect reproducibility]
+	•	County names were cleaned by removing state and “County” suffixes to improve readability.
+	•	Reliability categories were defined using fixed MOE percentage thresholds (<5%, 5–10%, >10%) for income, and a 15% cutoff for demographic variables.
+	•	Two counties (Allegheny and Elk) were selected for tract-level analysis to illustrate contrasting reliability levels.
+	•	Demographic percentages were calculated relative to total tract population, and summary statistics were aggregated at the county leve
 
 **Limitations:**
-[Note any limitations in your analysis - sample size issues, geographic scope, temporal factors, etc.]
+	•	ACS data are sample-based, so small counties and tracts often have wide MOEs that reduce precision.
+	•	The analysis covers only Pennsylvania; results may not generalize to other states.
+	•	Using 5-year ACS estimates improves stability but limits the ability to detect short-term changes.
+	•	Data quality issues may be particularly pronounced for smaller racial/ethnic groups not included in this study.
 
 ---
 
