@@ -14,6 +14,8 @@ website:
           - href: weekly-notes/week-01-notes.qmd
           - text: Week 2
           - href: weekly-notes/week-02-notes.qmd
+          - text: Week 3
+          - href: weekly-notes/week-03-notes.qmd
       - text: Assignments
         menu:
           - href: Assignments/assignment_1/assignment1_template.qmd

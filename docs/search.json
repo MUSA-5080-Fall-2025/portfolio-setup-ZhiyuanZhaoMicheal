@@ -126,6 +126,41 @@
     "text": "Reflection\n\n[What was most interesting] Exploring algorithm bias"
   },
   {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Zhiyuan Portfolio",
+    "section": "",
+    "text": "This portfolio documents my learning journey in Public Policy Analytics (MUSA 5080).\n\n\nAdvanced spatial analysis and data science for urban planning and public policy.\n\n\n\n\nWeekly Notes: My learning reflections and key concepts\nLabs: Completed assignments and analyses\nFinal Project: Capstone modeling challenge\n\n\n\n\nMy name is Zhiyuan Zhao/Michael from Hangzhou China Background: GIS\n\n\n\n\nEmail: [zhao2003@upenn.edu]\nGitHub: [@zhaozhiyuanmichael]"
+  },
+  {
+    "objectID": "index.html#about-this-course",
+    "href": "index.html#about-this-course",
+    "title": "Zhiyuan Portfolio",
+    "section": "",
+    "text": "Advanced spatial analysis and data science for urban planning and public policy."
+  },
+  {
+    "objectID": "index.html#portfolio-structure",
+    "href": "index.html#portfolio-structure",
+    "title": "Zhiyuan Portfolio",
+    "section": "",
+    "text": "Weekly Notes: My learning reflections and key concepts\nLabs: Completed assignments and analyses\nFinal Project: Capstone modeling challenge"
+  },
+  {
+    "objectID": "index.html#about-me",
+    "href": "index.html#about-me",
+    "title": "Zhiyuan Portfolio",
+    "section": "",
+    "text": "My name is Zhiyuan Zhao/Michael from Hangzhou China Background: GIS"
+  },
+  {
+    "objectID": "index.html#contact",
+    "href": "index.html#contact",
+    "title": "Zhiyuan Portfolio",
+    "section": "",
+    "text": "Email: [zhao2003@upenn.edu]\nGitHub: [@zhaozhiyuanmichael]"
+  },
+  {
     "objectID": "Assignments/assignment_1/assignment1_template.html",
     "href": "Assignments/assignment_1/assignment1_template.html",
     "title": "Assignment 1: Census Data Quality for Policy Decisions",
@@ -238,39 +273,39 @@
     "text": "Submission Checklist\nBefore submitting your portfolio link on Canvas:\n\nAll code chunks run without errors\nAll “[Fill this in]” prompts have been completed\nTables are properly formatted and readable\nExecutive summary addresses all four required components\nPortfolio navigation includes this assignment\nCensus API key is properly set\nDocument renders correctly to HTML\n\nRemember: Submit your portfolio URL on Canvas, not the file itself. Your assignment should be accessible at your-portfolio-url/assignments/assignment_1/your_file_name.html"
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Zhiyuan Portfolio",
+    "objectID": "weekly-notes/week-03-notes.html",
+    "href": "weekly-notes/week-03-notes.html",
+    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
     "section": "",
-    "text": "This portfolio documents my learning journey in Public Policy Analytics (MUSA 5080).\n\n\nAdvanced spatial analysis and data science for urban planning and public policy.\n\n\n\n\nWeekly Notes: My learning reflections and key concepts\nLabs: Completed assignments and analyses\nFinal Project: Capstone modeling challenge\n\n\n\n\nMy name is Zhiyuan Zhao/Michael from Hangzhou China Background: GIS\n\n\n\n\nEmail: [zhao2003@upenn.edu]\nGitHub: [@zhaozhiyuanmichael]"
+    "text": "•   Limits of summary statistics: Example of Anscombe’s Quartet shows identical statistics can hide very different patterns.\n•   Policy relevance: Visuals reveal outliers, inequality, and non-linear trends that summary stats may obscure.\n•   Ethical dimension: Most planners fail to report ACS uncertainty, violating professional codes; visualizations should make uncertainty visible.\n•   Consequences of poor visuals: Misleading scales, cherry-picked data, or ignored uncertainty can directly harm policy decisions.\n⸻"
   },
   {
-    "objectID": "index.html#about-this-course",
-    "href": "index.html#about-this-course",
-    "title": "Zhiyuan Portfolio",
+    "objectID": "weekly-notes/week-03-notes.html#part-1-why-visualization-matters",
+    "href": "weekly-notes/week-03-notes.html#part-1-why-visualization-matters",
+    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
     "section": "",
-    "text": "Advanced spatial analysis and data science for urban planning and public policy."
+    "text": "•   Limits of summary statistics: Example of Anscombe’s Quartet shows identical statistics can hide very different patterns.\n•   Policy relevance: Visuals reveal outliers, inequality, and non-linear trends that summary stats may obscure.\n•   Ethical dimension: Most planners fail to report ACS uncertainty, violating professional codes; visualizations should make uncertainty visible.\n•   Consequences of poor visuals: Misleading scales, cherry-picked data, or ignored uncertainty can directly harm policy decisions.\n⸻"
   },
   {
-    "objectID": "index.html#portfolio-structure",
-    "href": "index.html#portfolio-structure",
-    "title": "Zhiyuan Portfolio",
-    "section": "",
-    "text": "Weekly Notes: My learning reflections and key concepts\nLabs: Completed assignments and analyses\nFinal Project: Capstone modeling challenge"
+    "objectID": "weekly-notes/week-03-notes.html#part-2-grammar-of-graphics-ggplot2",
+    "href": "weekly-notes/week-03-notes.html#part-2-grammar-of-graphics-ggplot2",
+    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
+    "section": "Part 2: Grammar of Graphics (ggplot2)",
+    "text": "Part 2: Grammar of Graphics (ggplot2)\n•   Core structure: Data → Aesthetics → Geometries → Visual layers.\n•   Syntax: ggplot(data) + aes(...) + geom_*() + additional_layers().\n•   Aesthetic mappings: x/y position, color, fill, size, shape, alpha.\n•   Customization: Add themes, labels, scales, facets for professional visuals.\n•   Philosophy: Build plots incrementally with layers using +.\n⸻"
   },
   {
-    "objectID": "index.html#about-me",
-    "href": "index.html#about-me",
-    "title": "Zhiyuan Portfolio",
-    "section": "",
-    "text": "My name is Zhiyuan Zhao/Michael from Hangzhou China Background: GIS"
+    "objectID": "weekly-notes/week-03-notes.html#part-3-exploratory-data-analysis-eda",
+    "href": "weekly-notes/week-03-notes.html#part-3-exploratory-data-analysis-eda",
+    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
+    "section": "Part 3: Exploratory Data Analysis (EDA)",
+    "text": "Part 3: Exploratory Data Analysis (EDA)\n•   Mindset: Detective work—explore distributions, patterns, anomalies, reliability.\n•   Workflow: Load & inspect → Assess reliability (MOE, CV) → Visualize → Explore relationships → Identify anomalies → Document limitations.\n•   Distributions: Look for skewness, outliers, multimodality.\n•   Data quality via visualization: Small populations often show higher uncertainty—risk of systematic undercounting.\n•   Best practices (Jurjevich et al., 2018):\n•   Always report MOEs or note omission.\n•   Use CV thresholds: &lt;12% reliable, 12–40% somewhat reliable, &gt;40% unreliable.\n•   Reduce uncertainty by aggregating data.\n•   Test statistical significance for comparisons.\n•   Policy focus: Check for geographic concentration, demographic disparities, temporal changes, and reliability of estimates.\n⸻"
   },
   {
-    "objectID": "index.html#contact",
-    "href": "index.html#contact",
-    "title": "Zhiyuan Portfolio",
-    "section": "",
-    "text": "Email: [zhao2003@upenn.edu]\nGitHub: [@zhaozhiyuanmichael]"
+    "objectID": "weekly-notes/week-03-notes.html#part-4-data-joins-integration",
+    "href": "weekly-notes/week-03-notes.html#part-4-data-joins-integration",
+    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
+    "section": "Part 4: Data Joins & Integration",
+    "text": "Part 4: Data Joins & Integration\n•   Purpose: Combine datasets (e.g., demographics + economics, survey + geography).\n•   Join types in dplyr: left_join(), right_join(), inner_join(), full_join().\n•   Practice: left_join() most common for enriching main dataset.\n•   Caution: Always verify join results and assess combined data reliability."
   },
   {
     "objectID": "weekly-notes/week-01-notes.html#key-concepts-learned",

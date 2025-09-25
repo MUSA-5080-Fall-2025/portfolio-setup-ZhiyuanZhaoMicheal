@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-09-08">
+<meta name="dcterms.date" content="2025-09-22">
 
-<title>Week 1 Notes - Course Introduction – Zhiyuan - MUSA 5080 Portfolio</title>
+<title>Week 3 Notes - Data Visualization &amp; Exploratory Analysis – Zhiyuan - MUSA 5080 Portfolio</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -145,11 +145,10 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#key-concepts-learned" id="toc-key-concepts-learned" class="nav-link active" data-scroll-target="#key-concepts-learned">Key Concepts Learned</a></li>
-  <li><a href="#coding-techniques" id="toc-coding-techniques" class="nav-link" data-scroll-target="#coding-techniques">Coding Techniques</a></li>
-  <li><a href="#questions-challenges" id="toc-questions-challenges" class="nav-link" data-scroll-target="#questions-challenges">Questions &amp; Challenges</a></li>
-  <li><a href="#connections-to-policy" id="toc-connections-to-policy" class="nav-link" data-scroll-target="#connections-to-policy">Connections to Policy</a></li>
-  <li><a href="#reflection" id="toc-reflection" class="nav-link" data-scroll-target="#reflection">Reflection</a></li>
+  <li><a href="#part-1-why-visualization-matters" id="toc-part-1-why-visualization-matters" class="nav-link active" data-scroll-target="#part-1-why-visualization-matters">Part 1: Why Visualization Matters</a></li>
+  <li><a href="#part-2-grammar-of-graphics-ggplot2" id="toc-part-2-grammar-of-graphics-ggplot2" class="nav-link" data-scroll-target="#part-2-grammar-of-graphics-ggplot2">Part 2: Grammar of Graphics (ggplot2)</a></li>
+  <li><a href="#part-3-exploratory-data-analysis-eda" id="toc-part-3-exploratory-data-analysis-eda" class="nav-link" data-scroll-target="#part-3-exploratory-data-analysis-eda">Part 3: Exploratory Data Analysis (EDA)</a></li>
+  <li><a href="#part-4-data-joins-integration" id="toc-part-4-data-joins-integration" class="nav-link" data-scroll-target="#part-4-data-joins-integration">Part 4: Data Joins &amp; Integration</a></li>
   </ul>
 </nav>
     </div>
@@ -158,7 +157,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Week 1 Notes - Course Introduction</h1>
+<h1 class="title">Week 3 Notes - Data Visualization &amp; Exploratory Analysis</h1>
 </div>
 
 
@@ -169,7 +168,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">September 8, 2025</p>
+      <p class="date">September 22, 2025</p>
     </div>
   </div>
   
@@ -181,40 +180,43 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p><embed src="ClassNote1.pdf" class="img-fluid"></p>
-<section id="key-concepts-learned" class="level2">
-<h2 class="anchored" data-anchor-id="key-concepts-learned">Key Concepts Learned</h2>
-<ul>
-<li>[intro]</li>
-<li>[Technical skills covered]</li>
-</ul>
+<section id="part-1-why-visualization-matters" class="level2">
+<h2 class="anchored" data-anchor-id="part-1-why-visualization-matters">Part 1: Why Visualization Matters</h2>
+<pre><code>•   Limits of summary statistics: Example of Anscombe’s Quartet shows identical statistics can hide very different patterns.
+•   Policy relevance: Visuals reveal outliers, inequality, and non-linear trends that summary stats may obscure.
+•   Ethical dimension: Most planners fail to report ACS uncertainty, violating professional codes; visualizations should make uncertainty visible.
+•   Consequences of poor visuals: Misleading scales, cherry-picked data, or ignored uncertainty can directly harm policy decisions.</code></pre>
+<p>⸻</p>
 </section>
-<section id="coding-techniques" class="level2">
-<h2 class="anchored" data-anchor-id="coding-techniques">Coding Techniques</h2>
-<ul>
-<li>[New R functions or approaches]</li>
-<li>[Quarto features learned]</li>
-</ul>
+<section id="part-2-grammar-of-graphics-ggplot2" class="level2">
+<h2 class="anchored" data-anchor-id="part-2-grammar-of-graphics-ggplot2">Part 2: Grammar of Graphics (ggplot2)</h2>
+<pre><code>•   Core structure: Data → Aesthetics → Geometries → Visual layers.
+•   Syntax: ggplot(data) + aes(...) + geom_*() + additional_layers().
+•   Aesthetic mappings: x/y position, color, fill, size, shape, alpha.
+•   Customization: Add themes, labels, scales, facets for professional visuals.
+•   Philosophy: Build plots incrementally with layers using +.</code></pre>
+<p>⸻</p>
 </section>
-<section id="questions-challenges" class="level2">
-<h2 class="anchored" data-anchor-id="questions-challenges">Questions &amp; Challenges</h2>
-<ul>
-<li>[What I didn’t fully understand]</li>
-<li>[Areas needing more practice]</li>
-</ul>
+<section id="part-3-exploratory-data-analysis-eda" class="level2">
+<h2 class="anchored" data-anchor-id="part-3-exploratory-data-analysis-eda">Part 3: Exploratory Data Analysis (EDA)</h2>
+<pre><code>•   Mindset: Detective work—explore distributions, patterns, anomalies, reliability.
+•   Workflow: Load &amp; inspect → Assess reliability (MOE, CV) → Visualize → Explore relationships → Identify anomalies → Document limitations.
+•   Distributions: Look for skewness, outliers, multimodality.
+•   Data quality via visualization: Small populations often show higher uncertainty—risk of systematic undercounting.
+•   Best practices (Jurjevich et al., 2018):
+•   Always report MOEs or note omission.
+•   Use CV thresholds: &lt;12% reliable, 12–40% somewhat reliable, &gt;40% unreliable.
+•   Reduce uncertainty by aggregating data.
+•   Test statistical significance for comparisons.
+•   Policy focus: Check for geographic concentration, demographic disparities, temporal changes, and reliability of estimates.</code></pre>
+<p>⸻</p>
 </section>
-<section id="connections-to-policy" class="level2">
-<h2 class="anchored" data-anchor-id="connections-to-policy">Connections to Policy</h2>
-<ul>
-<li>[How this week’s content applies to real policy work]</li>
-</ul>
-</section>
-<section id="reflection" class="level2">
-<h2 class="anchored" data-anchor-id="reflection">Reflection</h2>
-<ul>
-<li>[What was most interesting]</li>
-<li>[How I’ll apply this knowledge]</li>
-</ul>
+<section id="part-4-data-joins-integration" class="level2">
+<h2 class="anchored" data-anchor-id="part-4-data-joins-integration">Part 4: Data Joins &amp; Integration</h2>
+<pre><code>•   Purpose: Combine datasets (e.g., demographics + economics, survey + geography).
+•   Join types in dplyr: left_join(), right_join(), inner_join(), full_join().
+•   Practice: left_join() most common for enriching main dataset.
+•   Caution: Always verify join results and assess combined data reliability.</code></pre>
 
 
 </section>

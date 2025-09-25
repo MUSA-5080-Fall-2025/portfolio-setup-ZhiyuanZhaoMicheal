@@ -1,0 +1,43 @@
+---
+title: "Week 3 Notes - Data Visualization & Exploratory Analysis"
+date: "2025-09-22"
+---
+
+
+## Part 1: Why Visualization Matters
+	•	Limits of summary statistics: Example of Anscombe’s Quartet shows identical statistics can hide very different patterns.
+	•	Policy relevance: Visuals reveal outliers, inequality, and non-linear trends that summary stats may obscure.
+	•	Ethical dimension: Most planners fail to report ACS uncertainty, violating professional codes; visualizations should make uncertainty visible.
+	•	Consequences of poor visuals: Misleading scales, cherry-picked data, or ignored uncertainty can directly harm policy decisions.
+
+⸻
+
+## Part 2: Grammar of Graphics (ggplot2)
+	•	Core structure: Data → Aesthetics → Geometries → Visual layers.
+	•	Syntax: ggplot(data) + aes(...) + geom_*() + additional_layers().
+	•	Aesthetic mappings: x/y position, color, fill, size, shape, alpha.
+	•	Customization: Add themes, labels, scales, facets for professional visuals.
+	•	Philosophy: Build plots incrementally with layers using +.
+
+⸻
+
+## Part 3: Exploratory Data Analysis (EDA)
+	•	Mindset: Detective work—explore distributions, patterns, anomalies, reliability.
+	•	Workflow: Load & inspect → Assess reliability (MOE, CV) → Visualize → Explore relationships → Identify anomalies → Document limitations.
+	•	Distributions: Look for skewness, outliers, multimodality.
+	•	Data quality via visualization: Small populations often show higher uncertainty—risk of systematic undercounting.
+	•	Best practices (Jurjevich et al., 2018):
+	•	Always report MOEs or note omission.
+	•	Use CV thresholds: <12% reliable, 12–40% somewhat reliable, >40% unreliable.
+	•	Reduce uncertainty by aggregating data.
+	•	Test statistical significance for comparisons.
+	•	Policy focus: Check for geographic concentration, demographic disparities, temporal changes, and reliability of estimates.
+
+⸻
+
+## Part 4: Data Joins & Integration
+	•	Purpose: Combine datasets (e.g., demographics + economics, survey + geography).
+	•	Join types in dplyr: left_join(), right_join(), inner_join(), full_join().
+	•	Practice: left_join() most common for enriching main dataset.
+	•	Caution: Always verify join results and assess combined data reliability.
+
