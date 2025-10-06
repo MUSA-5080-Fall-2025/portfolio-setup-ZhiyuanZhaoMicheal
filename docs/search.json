@@ -86,49 +86,49 @@
   {
     "objectID": "weekly-notes/week-04-notes.html",
     "href": "weekly-notes/week-04-notes.html",
-    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
+    "title": "Week 4 Notes - Spatial Data & GIS Operations in R",
     "section": "",
     "text": "Week 4 Lecture Summary: Spatial Data & GIS Operations in R ￼"
   },
   {
     "objectID": "weekly-notes/week-04-notes.html#importance-of-spatial-analysis",
     "href": "weekly-notes/week-04-notes.html#importance-of-spatial-analysis",
-    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
+    "title": "Week 4 Notes - Spatial Data & GIS Operations in R",
     "section": "1. Importance of Spatial Analysis",
     "text": "1. Importance of Spatial Analysis\n•   Moves beyond tabular demographic data by asking where patterns occur.\n•   Supports real policy questions: locating underserved areas, understanding spatial clustering, comparing jurisdictions, and identifying environmental justice concerns.\n•   Spatial bias in algorithms can reinforce inequality; spatial understanding helps design fairer systems."
   },
   {
     "objectID": "weekly-notes/week-04-notes.html#spatial-data-fundamentals",
     "href": "weekly-notes/week-04-notes.html#spatial-data-fundamentals",
-    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
+    "title": "Week 4 Notes - Spatial Data & GIS Operations in R",
     "section": "2. Spatial Data Fundamentals",
     "text": "2. Spatial Data Fundamentals\n•   Vector model: points (locations), lines (networks), polygons (areas) with geometry + attributes.\n•   sf package: integrates spatial data with tidyverse; treats spatial objects as data frames with geometry columns.\n•   Common formats: Shapefiles, GeoJSON, KML/KMZ, PostGIS connections."
   },
   {
     "objectID": "weekly-notes/week-04-notes.html#spatial-operations",
     "href": "weekly-notes/week-04-notes.html#spatial-operations",
-    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
+    "title": "Week 4 Notes - Spatial Data & GIS Operations in R",
     "section": "3. Spatial Operations",
     "text": "3. Spatial Operations\n•   Subsetting: st_filter() + predicates (st_intersects, st_touches, st_within). Predicate choice determines spatial relationship logic.\n•   Spatial joins: merge datasets based on spatial relationships.\n•   Distance/Area calculations: require attention to coordinate reference systems (CRS).\n•   Dot (.) acts as placeholder in pipes for the data being transformed."
   },
   {
     "objectID": "weekly-notes/week-04-notes.html#geometry-operations",
     "href": "weekly-notes/week-04-notes.html#geometry-operations",
-    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
+    "title": "Week 4 Notes - Spatial Data & GIS Operations in R",
     "section": "4. Geometry Operations",
     "text": "4. Geometry Operations\n•   Buffers: create zones around features for accessibility or impact analysis. Buffer size can vary by attribute.\n•   Intersection vs. Filter:\n•   st_filter() selects entire features based on relation.\n•   st_intersection() clips geometries for overlay analysis.\n•   Union: merges multiple geometries.\n•   Spatial aggregation: summarizes attributes across spatial boundaries."
   },
   {
     "objectID": "weekly-notes/week-04-notes.html#coordinate-reference-systems-crs",
     "href": "weekly-notes/week-04-notes.html#coordinate-reference-systems-crs",
-    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
+    "title": "Week 4 Notes - Spatial Data & GIS Operations in R",
     "section": "5. Coordinate Reference Systems (CRS)",
     "text": "5. Coordinate Reference Systems (CRS)\n•   Projection matters because the Earth is curved but maps are flat.\n•   GCS (e.g., WGS84 EPSG:4326): lat/long, good for global/web, not for measurement.\n•   PCS (e.g., State Plane, UTM, Albers): planar coordinates, good for area/distance calculations.\n•   Use st_crs() to check, st_set_crs() if missing, and st_transform() to change CRS for analysis.\n•   Transform when measuring, buffering, or working locally."
   },
   {
     "objectID": "weekly-notes/week-04-notes.html#policy-analysis-workflow",
     "href": "weekly-notes/week-04-notes.html#policy-analysis-workflow",
-    "title": "Week 3 Notes - Data Visualization & Exploratory Analysis",
+    "title": "Week 4 Notes - Spatial Data & GIS Operations in R",
     "section": "6. Policy Analysis Workflow",
     "text": "6. Policy Analysis Workflow\nTypical spatial workflow: 1. Load spatial and attribute data. 2. Check and transform CRS. 3. Join datasets. 4. Apply spatial operations (buffers, intersections, distance). 5. Aggregate results. 6. Visualize with maps/charts. 7. Interpret for policy.\nExample: Healthcare access analysis • Project data to local CRS. • Create 25 km buffers around hospitals. • For each county: check if intersecting buffer and calculate distance to nearest hospital. • Join results with demographics for further analysis."
   },

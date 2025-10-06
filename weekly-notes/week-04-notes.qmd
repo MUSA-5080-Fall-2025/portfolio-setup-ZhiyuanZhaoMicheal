@@ -1,6 +1,6 @@
 ---
-title: "Week 3 Notes - Data Visualization & Exploratory Analysis"
-date: "2025-09-22"
+title: "Week 4 Notes - Spatial Data & GIS Operations in R"
+date: "2025-10-01"
 ---
 
 
