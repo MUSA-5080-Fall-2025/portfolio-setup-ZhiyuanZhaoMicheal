@@ -1,0 +1,58 @@
+---
+title: "Week 3 Notes - Data Visualization & Exploratory Analysis"
+date: "2025-09-22"
+---
+
+
+Week 4 Lecture Summary: Spatial Data & GIS Operations in R ￼
+
+## 1. Importance of Spatial Analysis
+	•	Moves beyond tabular demographic data by asking where patterns occur.
+	•	Supports real policy questions: locating underserved areas, understanding spatial clustering, comparing jurisdictions, and identifying environmental justice concerns.
+	•	Spatial bias in algorithms can reinforce inequality; spatial understanding helps design fairer systems.
+
+## 2. Spatial Data Fundamentals
+	•	Vector model: points (locations), lines (networks), polygons (areas) with geometry + attributes.
+	•	sf package: integrates spatial data with tidyverse; treats spatial objects as data frames with geometry columns.
+	•	Common formats: Shapefiles, GeoJSON, KML/KMZ, PostGIS connections.
+
+## 3. Spatial Operations
+	•	Subsetting: st_filter() + predicates (st_intersects, st_touches, st_within). Predicate choice determines spatial relationship logic.
+	•	Spatial joins: merge datasets based on spatial relationships.
+	•	Distance/Area calculations: require attention to coordinate reference systems (CRS).
+	•	Dot (.) acts as placeholder in pipes for the data being transformed.
+
+## 4. Geometry Operations
+	•	Buffers: create zones around features for accessibility or impact analysis. Buffer size can vary by attribute.
+	•	Intersection vs. Filter:
+	•	st_filter() selects entire features based on relation.
+	•	st_intersection() clips geometries for overlay analysis.
+	•	Union: merges multiple geometries.
+	•	Spatial aggregation: summarizes attributes across spatial boundaries.
+
+## 5. Coordinate Reference Systems (CRS)
+	•	Projection matters because the Earth is curved but maps are flat.
+	•	GCS (e.g., WGS84 EPSG:4326): lat/long, good for global/web, not for measurement.
+	•	PCS (e.g., State Plane, UTM, Albers): planar coordinates, good for area/distance calculations.
+	•	Use st_crs() to check, st_set_crs() if missing, and st_transform() to change CRS for analysis.
+	•	Transform when measuring, buffering, or working locally.
+
+## 6. Policy Analysis Workflow
+
+Typical spatial workflow:
+	1.	Load spatial and attribute data.
+	2.	Check and transform CRS.
+	3.	Join datasets.
+	4.	Apply spatial operations (buffers, intersections, distance).
+	5.	Aggregate results.
+	6.	Visualize with maps/charts.
+	7.	Interpret for policy.
+
+Example: Healthcare access analysis
+	•	Project data to local CRS.
+	•	Create 25 km buffers around hospitals.
+	•	For each county: check if intersecting buffer and calculate distance to nearest hospital.
+	•	Join results with demographics for further analysis.
+
+
+
