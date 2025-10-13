@@ -1,0 +1,52 @@
+---
+title: "Week 5 Notes - Introduction to Linear Regression"
+date: "2025-10-10"
+---
+
+
+Week 5 Summary — Introduction to Linear Regression 
+
+1. Statistical Learning Basics
+	•	Goal: find relationships between predictors (X) and an outcome (Y).
+	•	Two main objectives:
+	•	Prediction — making accurate forecasts.
+	•	Inference — understanding which variables matter and how.
+	•	Methods:
+	•	Parametric assumes a specific relationship form (e.g., linear regression).
+	•	Non-parametric makes fewer assumptions but needs more data.
+
+2. Linear Regression Concepts
+	•	Assumes a linear relationship between variables.
+	•	Uses Ordinary Least Squares (OLS) to estimate coefficients.
+	•	Advantages: simple, interpretable, widely used.
+	•	Limitations: assumes linearity, sensitive to outliers, depends on model assumptions.
+
+3. Prediction vs Inference ￼
+	•	Inference: focuses on explaining relationships and coefficient meaning.
+	•	Prediction: focuses on accuracy and practical forecasting.
+	•	A statistically strong model can still be ethically biased.
+
+4. Model Evaluation
+	•	In-sample fit uses R²; shows how much variation the model explains.
+	•	Out-of-sample performance uses train/test split or cross-validation.
+	•	Overfitting occurs when a model fits training data too closely but predicts poorly.
+	•	RMSE and MAE measure prediction error.
+
+5. Regression Assumptions
+	•	Linearity: residuals should be random around zero.
+	•	Constant variance: avoid heteroskedasticity (test with Breusch–Pagan).
+	•	Normal residuals: important for inference, less for prediction.
+	•	No multicollinearity: predictors shouldn’t be highly correlated (check VIF).
+	•	No influential outliers: check leverage and Cook’s distance.
+
+6. Improving Models
+	•	Add meaningful predictors to improve fit.
+	•	Use log transformations for curved relationships.
+	•	Include categorical variables when appropriate.
+	•	Balance model complexity with interpretability.
+
+7. Key Ideas
+	•	R² alone doesn’t prove a model is good; always test predictions.
+	•	Diagnostic checks ensure assumptions hold.
+	•	Visualization and interpretation are as important as computation.
+	•	Ethical reflection matters in applying models to real data.
