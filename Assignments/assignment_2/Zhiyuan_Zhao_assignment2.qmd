@@ -51,9 +51,12 @@ library(kableExtra)
 library(units)
 library(patchwork)
 library(ggspatial)
+```
 
+```{r, include=FALSE}
 census_api_key("a8081579173d9c4b9d21b9265f9c67c8708d6a02", install = TRUE, overwrite = TRUE)
-
+```
+```{r}
 # Load spatial data
 library(here)
 
@@ -231,7 +234,7 @@ vulnerable_tracts_dist <- vul_p |>
     dist_to_hosp_mi  = dists_mi
   )
 
-# optional: join hospital name if a name field exists
+# join hospital name if a name field exists
 name_field <- intersect(c("NAME","Name","name","HOSP_NAME","HOSPITAL","HospName"), names(hospitals_p))[1]
 if (!is.na(name_field)) {
   vulnerable_tracts_dist <- vulnerable_tracts_dist |>
@@ -299,8 +302,15 @@ cat(
 
 ```
 
-**Questions to answer:** - How many tracts are underserved? - What percentage of vulnerable tracts are underserved? - Does this surprise you? Why or why not?
+**Questions to answer:** 
+- How many tracts are underserved? 
+127
 
+- What percentage of vulnerable tracts are underserved? 
+3.8%
+
+- Does this surprise you? Why or why not?
+Yes, a bit less than I expected.
 ------------------------------------------------------------------------
 
 #### Step 6: Aggregate to County Level
@@ -310,20 +320,68 @@ Use spatial joins and aggregation to calculate county-level statistics about vul
 **Your Task:**
 
 ```{r}
-# Spatial join tracts to counties
+# find county name field in pa_counties_p
+county_name_field <- intersect(
+  c("NAME","NAME20","NAMELSAD","COUNTY","COUNTY_NAM","COUNTYNAME","County","county","NAME10"),
+  names(pa_counties_p)
+)[1]
 
+if (is.na(county_name_field)) {
+  stop("Cannot find a county name field in pa_counties_p. Inspect names(pa_counties_p).")
+}
 
-# Aggregate statistics by county
+# keep only county name + geometry, and rename to COUNTY
+counties_min <- pa_counties_p %>%
+  dplyr::select(COUNTY = all_of(county_name_field), geometry)
 
+# spatial join tracts -> counties
+tracts_county <- st_join(vulnerable_tracts_dist, counties_min, join = st_intersects, left = FALSE)
 
+# aggregate by COUNTY
+county_summary <- tracts_county %>%
+  st_drop_geometry() %>%
+  dplyr::group_by(COUNTY) %>%
+  dplyr::summarise(
+    n_vulnerable        = dplyr::n(),
+    n_underserved       = sum(underserved, na.rm = TRUE),
+    pct_underserved     = round(100 * n_underserved / n_vulnerable, 1),
+    avg_dist_mi         = round(mean(dist_to_hosp_mi, na.rm = TRUE), 2),
+    total_vulnerable_pop= sum(total_pop, na.rm = TRUE)
+  ) %>%
+  dplyr::arrange(dplyr::desc(pct_underserved))
 
+# table + tops
+kable(county_summary, caption = "County-level Healthcare Accessibility Summary") %>%
+  kable_styling(full_width = FALSE)
+
+top5_pct <- county_summary %>%
+  dplyr::slice_max(pct_underserved, n = 5) %>%
+  dplyr::select(COUNTY, pct_underserved)
+
+top5_pop <- county_summary %>%
+  dplyr::slice_max(total_vulnerable_pop, n = 5) %>%
+  dplyr::select(COUNTY, total_vulnerable_pop)
+
+cat("Top 5 counties by % underserved:\n"); print(top5_pct)
+cat("\nTop 5 counties by total vulnerable population:\n"); print(top5_pop)
 
 ```
 
 **Required county-level statistics:** - Number of vulnerable tracts - Number of underserved tracts\
 - Percentage of vulnerable tracts that are underserved - Average distance to nearest hospital for vulnerable tracts - Total vulnerable population
 
-**Questions to answer:** - Which 5 counties have the highest percentage of underserved vulnerable tracts? - Which counties have the most vulnerable people living far from hospitals? - Are there any patterns in where underserved counties are located?
+**Questions to answer:** 
+- Which 5 counties have the highest percentage of underserved vulnerable tracts? 
+JUNIATA, SULLIVAN, PIKE, SNYDER, CAMERON
+
+- Which counties have the most vulnerable people living far from hospitals? 
+PHILADELPHIA, ALLEGHENY, MONTGOMERY, BUCKS, CHESTER
+
+- Are there any patterns in where underserved counties are located?
+Yes. Underserved counties show clear geographic patterns:
+	•	Spatial distribution: They are concentrated in rural, mountainous, and sparsely populated regions of Pennsylvania—especially in central and northern counties such as Juniata, Cameron, Sullivan, and Pike.
+	•	Infrastructure gap: These areas have low hospital density and limited transportation access, leading to longer travel times to medical facilities.
+	•	Urban contrast: Southeastern and southwestern metropolitan areas (Philadelphia, Allegheny, Montgomery, Bucks, Chester) have good hospital coverage and almost no tracts beyond 15 miles.
 
 ------------------------------------------------------------------------
 
@@ -335,7 +393,26 @@ Create a professional table showing the top 10 priority counties for healthcare 
 
 ```{r}
 # Create and format priority counties table
+# Priority rule: sort by % underserved (desc), then avg distance (desc),
+# then # underserved tracts (desc), then vulnerable population (desc)
 
+priority_tbl <- county_summary %>%
+  arrange(desc(pct_underserved), desc(avg_dist_mi), desc(n_underserved), desc(total_vulnerable_pop)) %>%
+  slice_head(n = 10) %>%
+  transmute(
+    County = COUNTY,
+    `Vulnerable tracts`   = scales::comma(n_vulnerable),
+    `Underserved tracts`  = scales::comma(n_underserved),
+    `% underserved`       = scales::number(pct_underserved, accuracy = 0.1),
+    `Avg distance (mi)`   = scales::number(avg_dist_mi, accuracy = 0.01),
+    `Vulnerable population` = scales::comma(total_vulnerable_pop)
+  )
+
+kable(
+  priority_tbl,
+  caption = "Top 10 Priority Counties for Healthcare Investment (sorted by % underserved, distance, underserved count, population)"
+) %>%
+  kable_styling(full_width = FALSE)
 
 
 
@@ -356,11 +433,33 @@ Create a choropleth map showing healthcare access challenges at the county level
 **Your Task:**
 
 ```{r}
-# Create county-level access map
+library(ggplot2)
+library(scales)
+library(dplyr)
 
+# join county-level stats to county geometries
+counties_map <- pa_counties_p %>%
+  left_join(county_summary, by = c("COUNTY_NAM" = "COUNTY"))
 
-
-
+# choropleth filled by % underserved; hospitals as points
+ggplot() +
+  geom_sf(data = counties_map, aes(fill = pct_underserved), color = NA) +
+  geom_sf(data = hospitals_p, size = 0.6, alpha = 0.7) +
+  scale_fill_viridis_c(
+    name = "% underserved tracts",
+    labels = label_percent(accuracy = 0.1, scale = 1),
+    na.value = "grey90"
+  ) +
+  labs(
+    title = "Healthcare Access Gaps by County in Pennsylvania",
+    subtitle = "% of vulnerable tracts > 15 miles from nearest hospital",
+    caption = "Sources: ACS 2022 (tidycensus), PA hospitals, county boundaries"
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
+  )
 ```
 
 **Requirements:** - Fill counties by percentage of vulnerable tracts that are underserved - Include hospital locations as points - Use an appropriate color scheme - Include clear title, subtitle, and caption - Use `theme_void()` or similar clean theme - Add a legend with formatted labels
@@ -375,7 +474,35 @@ Create a map highlighting underserved vulnerable tracts.
 
 ```{r}
 # Create detailed tract-level map
+# Data prep
+tracts_map <- vulnerable_tracts_dist
+underserved_tracts <- tracts_map %>% filter(underserved)
 
+ggplot() +
+  # context: county boundaries
+  geom_sf(data = pa_counties_p, fill = NA, color = "grey50", linewidth = 0.2) +
+  # all vulnerable tracts (muted)
+  geom_sf(data = tracts_map, fill = "grey85", color = NA, alpha = 0.6) +
+  # underserved vulnerable tracts (highlight)
+  geom_sf(data = underserved_tracts, aes(fill = dist_to_hosp_mi), color = NA) +
+  # hospitals
+  geom_sf(data = hospitals_p, shape = 21, fill = "black", color = "white", size = 1) +
+  scale_fill_viridis_c(
+    name = "Distance to hospital (mi)",
+    option = "C",
+    limits = c(15, max(underserved_tracts$dist_to_hosp_mi, na.rm = TRUE)),
+    oob = scales::squish
+  ) +
+  labs(
+    title = "Underserved Vulnerable Tracts in Pennsylvania",
+    subtitle = "Tracts with vulnerable populations located > 15 miles from the nearest hospital",
+    caption = "Sources: ACS 2022 (tidycensus), PA hospitals, county boundaries"
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
+  )
 
 
 
@@ -393,7 +520,51 @@ Create a visualization showing the distribution of distances to hospitals for vu
 
 ```{r}
 # Create distribution visualization
+# Histogram of distances (vulnerable tracts)
+p_hist <- ggplot(vulnerable_tracts_dist, aes(x = dist_to_hosp_mi)) +
+  geom_histogram(bins = 40) +
+  geom_vline(xintercept = 15, linetype = "dashed") +
+  labs(
+    title = "Distance to Nearest Hospital (Vulnerable Tracts)",
+    x = "Distance (miles)", y = "Count",
+    caption = "Dashed line at 15 miles threshold"
+  ) +
+  theme_minimal()
 
+# Top-10 counties by underserved tracts (requires county_summary from Step 6)
+top10_underserved <- county_summary %>%
+  slice_max(n_underserved, n = 10) %>%
+  mutate(COUNTY = reorder(COUNTY, n_underserved))
+
+p_bar <- ggplot(top10_underserved, aes(x = COUNTY, y = n_underserved)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top 10 Counties by Number of Underserved Tracts",
+    x = NULL, y = "Underserved tracts (count)"
+  ) +
+  theme_minimal()
+
+# Scatter: distance vs. population, highlighting underserved tracts
+p_scatter <- ggplot(vulnerable_tracts_dist,
+                    aes(x = total_pop, y = dist_to_hosp_mi, alpha = underserved)) +
+  geom_point() +
+  scale_x_continuous(labels = comma) +
+  scale_alpha_manual(values = c(`TRUE` = 1, `FALSE` = 0.3), guide = "none") +
+  labs(
+    title = "Distance vs. Tract Population (Vulnerable Tracts)",
+    x = "Tract total population", y = "Distance to nearest hospital (miles)"
+  ) +
+  theme_minimal()
+
+# Display
+(p_hist | p_scatter) / p_bar
+
+# Brief interpretation
+cat("Interpretation:",
+    "Most vulnerable tracts lie within 15 miles, but a right tail exceeds the threshold.",
+    "Underserved tracts concentrate in a small set of counties.",
+    "Higher-population tracts are not necessarily farther from hospitals; gaps are mainly geographic.\n")
 
 
 
@@ -479,14 +650,72 @@ Choose ONE of the following challenge exercises, or propose your own research qu
     -   Provide basic summary statistics
 
 ```{r}
-# Load your additional dataset
+# Config
+crs_proj <- 2272          # Pennsylvania South State Plane (US feet)
+buf_ft   <- 2640          # 0.5 mile ≈ 2640 ft
 
+# Load schools 
+schools <- st_read(here("Assignments", "assignment_2", "data","Schools.geojson"), quiet = TRUE) %>%
+  st_transform(crs_proj)
 
+# Get Philadelphia tracts with children population (ACS 2022)
+# B09001_001 = total population under 18
+acs_children <- get_acs(
+  geography = "tract",
+  variables = "B09001_001",
+  state = "PA",
+  county = "Philadelphia",
+  year = 2022,
+  geometry = TRUE
+) %>%
+  st_transform(crs_proj) %>%
+  rename(child_pop = estimate) %>%
+  select(GEOID, NAME, child_pop, geometry) %>%
+  mutate(
+    tract_name = str_replace(NAME, ", Philadelphia County, Pennsylvania", "")
+  )
+
+# Build Philadelphia boundary from tracts
+phila_boundary <- acs_children %>% st_union() %>% st_as_sf()
+
+# Data overview
+cat("\n===== DATA OVERVIEW =====\n")
+
+cat("\n-- Schools --\n")
+print(schools)
+cat("\nCRS:\n"); print(st_crs(schools))
+cat("\nField summary:\n"); glimpse(schools)
+cat("\nCoordinate summary:\n"); print(summary(st_coordinates(schools)))
+
+cat("\n-- Philadelphia tracts (ACS 2022) --\n")
+print(acs_children)
+cat("\nCRS:\n"); print(st_crs(acs_children))
+cat("\nChild population summary:\n"); print(summary(acs_children$child_pop))
+
+# Quick visualization check
+ggplot() +
+  geom_sf(data = acs_children, fill = "grey95", color = NA) +
+  geom_sf(data = schools, color = "blue", size = 0.6) +
+  labs(title = "Spatial extent check – Schools and Philadelphia tracts") +
+  theme_minimal()
 
 
 ```
 
-**Questions to answer:** - What dataset did you choose and why? - What is the data source and date? - How many features does it contain? - What CRS is it in? Did you need to transform it?
+**Questions to answer:**
+- What dataset did you choose and why? 
+Philadelphia public schools and 2022 ACS census tracts with children population (under 18 years old). The school dataset defines the physical locations of educational facilities, while the tract-level ACS data provides demographic context to measure how many children live within and outside the school service areas.
+
+- What is the data source and date? - How many features does it contain? 
+The school locations were downloaded from OpenDataPhilly (“Philadelphia Schools”).
+The children population data were retrieved from the U.S. Census Bureau’s American Community Survey (ACS) 5-Year Estimates, 2022 release via the tidycensus R package.
+The OpenDataPhilly schools layer contains about 300 school points within Philadelphia.
+The ACS dataset includes 384 census tracts for the City of Philadelphia, each with a child_pop attribute (population under 18).
+
+- What CRS is it in? Did you need to transform it?
+Both datasets were standardized to EPSG:2272 — Pennsylvania South State Plane (US feet) to ensure accurate distance and area calculations.
+The original school data used a geographic coordinate system (latitude/longitude), so it was transformed to EPSG:2272 before creating 0.5-mile buffers. The ACS data were downloaded with geometry and then also projected to EPSG:2272 for consistency.
+
 
 ------------------------------------------------------------------------
 
@@ -496,6 +725,7 @@ Write a clear research statement that your analysis will answer.
 
 **Examples:** - "Do vulnerable tracts have adequate public transit access to hospitals?" - "Are EMS stations appropriately located near vulnerable populations?" - "Do areas with low vehicle access have worse hospital access?"
 
+Do areas in Philadelphia with higher concentrations of children have adequate spatial access to schools within a 0.5-mile walking distance?
 ------------------------------------------------------------------------
 
 3.  **Conduct spatial analysis**
@@ -508,15 +738,98 @@ Use at least TWO spatial operations to answer your research question.
 
 ```{r}
 # Your spatial analysis
+# Build 0.5-mile service buffer of schools
+school_buf <- schools %>%
+  st_buffer(buf_ft) %>%      # service area
+  st_union() %>%             # dissolve overlaps
+  st_as_sf()
+
+# Tract-level coverage and areal-weighted children counts
+area_total   <- st_area(acs_children)
+overlap_idx  <- st_intersects(acs_children, school_buf)
+has_overlap  <- lengths(overlap_idx) > 0
+area_covered <- units::set_units(0, "ft^2")
+area_covered[has_overlap] <- st_area(st_intersection(acs_children[has_overlap, ], school_buf))
+
+tracts_cov <- acs_children %>%
+  mutate(
+    area_total   = area_total,
+    area_covered = area_covered,
+    pct_covered  = pmin(1, as.numeric(area_covered / area_total)),
+    children_in_service = child_pop * pct_covered,
+    children_in_gap     = child_pop * (1 - pct_covered),
+    access_flag = case_when(
+      pct_covered >= 0.90 ~ "Well covered (≥90%)",
+      pct_covered >= 0.50 ~ "Partially covered (50–90%)",
+      TRUE               ~ "Gap (<50%)"
+    )
+  )
 
 
+# Citywide summaries
+city_summary <- tracts_cov %>%
+  st_drop_geometry() %>%
+  summarise(
+    tracts              = n(),
+    children_total      = sum(child_pop, na.rm = TRUE),
+    children_served     = sum(children_in_service, na.rm = TRUE),
+    children_gap        = sum(children_in_gap, na.rm = TRUE),
+    pct_children_served = round(100 * children_served / children_total, 1),
+    pct_children_gap    = round(100 * children_gap / children_total, 1)
+  )
+cat("\n===== CITYWIDE SUMMARY =====\n")
+print(city_summary)
 
+band_summary <- tracts_cov %>%
+  st_drop_geometry() %>%
+  group_by(access_flag) %>%
+  summarise(
+    n_tracts     = n(),
+    children_sum = sum(child_pop, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(match(access_flag, c("Well covered (≥90%)","Partially covered (50–90%)","Gap (<50%)")))
+cat("\n===== COVERAGE BANDS =====\n")
+print(band_summary)
 
+top_gap_tracts <- tracts_cov %>%
+  st_drop_geometry() %>%
+  transmute(
+    tract_name,
+    GEOID,
+    child_pop,
+    pct_covered = round(pct_covered, 3),
+    children_in_gap = round(children_in_gap)
+  ) %>%
+  arrange(desc(children_in_gap)) %>%
+  slice_head(n = 10)
+cat("\n===== TOP 10 GAP TRACTS =====\n")
+print(top_gap_tracts)
 
+# Maps
+# Coverage percent choropleth
+ggplot() +
+  geom_sf(data = tracts_cov, aes(fill = pct_covered), color = NA) +
+  geom_sf(data = phila_boundary, fill = NA, color = "grey40", linewidth = 0.2) +
+  scale_fill_viridis_c(name = "Coverage by area", labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    title = "School Service Coverage by Tract — Philadelphia",
+    subtitle = "0.5 mile buffer around schools; tract coverage by area overlap",
+    caption = "Schools: OpenDataPhilly; Children: ACS 2022 (B09001_001); CRS: EPSG 2272"
+  ) +
+  theme_minimal()
 
-
-
-
+# Children outside service areas (areal-weighted)
+ggplot() +
+  geom_sf(data = tracts_cov, aes(fill = children_in_gap), color = NA) +
+  geom_sf(data = phila_boundary, fill = NA, color = "grey40", linewidth = 0.2) +
+  scale_fill_viridis_c(name = "Children outside 0.5 mi", labels = scales::comma) +
+  labs(
+    title = "Children Outside 0.5-mile School Service Areas",
+    subtitle = "Areal-weighted estimate per tract",
+    caption = "ACS 2022 (B09001_001); CRS: EPSG 2272"
+  ) +
+  theme_minimal()
 
 ```
 
@@ -524,7 +837,7 @@ Use at least TWO spatial operations to answer your research question.
 
 **Your interpretation:**
 
-\[Write your findings here\]
+Philadelphia tracts show high access overall: 95.1% of children live within 0.5 miles of a school; 4.8% are outside service areas. Coverage by tract: 322 well covered (≥90%), 57 partially covered (50–90%), 29 gaps (<50%), totaling 293,209, 41,085, and 8,291 children respectively. The largest unmet-need tracts by children outside service areas include Census Tracts 348.02, 347.01, 363.03, 361, 373, 358, 357.02, 365.02, 346, 337.01. Maps confirm a small number of edge tracts drive most gaps; prioritizing these for new sites or access improvements would yield the highest impact.
 
 ## Finally - A few comments about your incorporation of feedback!
 
