@@ -781,7 +781,7 @@ Philadelphia tracts show high access overall: 95.1% of children live within 0.5 
 
 ## Finally - A few comments about your incorporation of feedback!
 
-I used include=FALSE to hide my API, removed the empty [], and deleted some overly long instructions.
+I used include=FALSE to hide my API, removed the empty [], deleted some overly long instructions and improved the variable names to make the code easier to read.
 
 ------------------------------------------------------------------------
 
