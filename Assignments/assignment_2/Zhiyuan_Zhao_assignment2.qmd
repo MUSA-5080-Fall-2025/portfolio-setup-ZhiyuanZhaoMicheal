@@ -104,7 +104,8 @@ pa_demo <- get_acs(
     median_income = "B19013_001",       
     pop_65_74 = "B01001_020",          
     pop_75_84 = "B01001_021",           
-    pop_85p = "B01001_022"         
+    pop_85p = "B01001_022",
+    progress = FALSE         
   ),
   year = 2022,
   geometry = TRUE

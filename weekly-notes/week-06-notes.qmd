@@ -1,0 +1,67 @@
+---
+title: "Week 6 Notes - Spatial Machine Learning & Advanced Regression"
+date: "2025-10-14"
+---
+
+
+Summary of Week 6 Lecture: Spatial Machine Learning & Advanced Regression ￼
+
+⸻
+
+1. Baseline Model Building
+	•	Began with a simple linear regression predicting SalePrice from LivingArea (structural feature only).
+	•	Coefficient: each extra sq ft adds ≈ $216.
+	•	R² ≈ 0.13 → explains only 13% of variation.
+	•	Missing factors: location, amenities, neighborhood quality, crime, schools.
+
+⸻
+
+2. Adding Predictors
+	•	Adding number of bathrooms increased R² slightly (to 0.14).
+	•	Demonstrated diminishing returns from structural-only models.
+	•	Emphasized the need for spatial variables to capture “location, location, location.”
+
+⸻
+
+3. Introducing Spatial Data
+	•	Converted tabular data to spatial (sf) format using coordinates.
+	•	Transformed CRS from EPSG:4326 to MA State Plane for accurate distance measures.
+	•	Joined parcels with neighborhood polygons using st_join().
+	•	Visualized median prices by neighborhood, showing clear spatial clustering:
+	•	Back Bay, Beacon Hill, South End highest.
+	•	Dorchester, Roxbury, Mattapan lowest.
+
+⸻
+
+4. Regression with Categorical (Dummy) Variables
+	•	Used neighborhood name (name) as a factor.
+	•	R automatically creates dummy variables for each neighborhood.
+	•	One neighborhood (Allston) becomes the reference category.
+	•	Model interpretation:
+	•	Positive coefficient → more expensive than Allston.
+	•	Negative coefficient → cheaper than Allston.
+	•	Example: identical houses differ by millions between Back Bay ($8.5M) and Roxbury ($0.33M).
+
+⸻
+
+5. Interaction Effects
+	•	Question: does square footage matter equally in all areas?
+	•	Built interaction models:
+	•	Model 1 (no interaction): same slope everywhere.
+	•	Model 2 (interaction): slope differs by neighborhood wealth.
+	•	Defined “wealthy neighborhoods” = Back Bay, Beacon Hill, South End, Bay Village.
+	•	Result:
+	•	Wealthy areas have much steeper slopes (≈ $985/sq ft vs. $95 in others).
+	•	Confirms Luxury Premium Hypothesis — larger homes in wealthy areas command disproportionate premiums.
+
+⸻
+
+6. Conceptual Takeaways
+	•	Spatial features and fixed effects are critical to avoid biased estimates.
+	•	Spatial autocorrelation violates OLS independence assumptions.
+	•	Remedies: include location terms, fixed effects, or spatial regression models.
+	•	Understanding geography improves both predictive accuracy and policy relevance in housing analytics.
+
+⸻
+
+Key Terms: baseline model, dummy variable, fixed effects, interaction term, spatial join, CRS transformation, hedonic model, Tobler’s First Law, spatial autocorrelation.
