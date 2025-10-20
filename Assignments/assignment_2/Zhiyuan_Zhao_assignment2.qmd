@@ -63,7 +63,7 @@ library(here)
 pa_counties <- st_read(here::here("Assignments", "assignment_2", "data", "Pennsylvania_County_Boundaries.shp"))
 hospitals   <- st_read(here::here("Assignments", "assignment_2", "data", "hospitals.geojson"))
 # Pennsylvania census tracts
-pa_tracts <- tracts("PA", year = 2022, cb = TRUE)
+pa_tracts <- tracts("PA", year = 2022, cb = TRUE, progress = FALSE)
 
 # Check that all data loaded correctly
 cat("Number of hospitals:", nrow(hospitals), "\n")
