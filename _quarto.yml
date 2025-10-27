@@ -28,6 +28,15 @@ website:
             text: "Assignment 1: Census Data Exploration"
           - href: Assignments/assignment_2/Zhiyuan_Zhao_assignment2.qmd
             text: "Assignment 2: Data Cleaning and Visualization"
+      - text: Midterm Challenge
+        menu:
+          - href: Assignments/Midterm/Yang_Chen_Fang_Gao_Xiang_Zhao_Appendix.qmd
+            text: "Appendix"
+          - href: Assignments/Midterm/Yang_Chen_Fang_Gao_Xiang_Zhao_Presentation.qmd
+            text: "Presentatiom"
+         
+          
+
 
 format:
   html:
