@@ -1,0 +1,902 @@
+---
+title: "Spatial Predictive Analysis: Predicting Burglaries Using Sanitation Complaints"
+subtitle: "MUSA 5080 - Fall 2025"
+author: "Zhiyuan Zhao"
+date: today
+format:
+  html:
+    code-fold: show
+    code-tools: true
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    theme: cosmo
+    embed-resources: true
+editor: visual
+execute:
+  warning: false
+  message: false
+---
+
+## About This Analysis
+
+This analysis applies spatial predictive modeling techniques to predict burglaries in Chicago using sanitation code complaints as the primary predictor variable. Following the "broken windows theory," we hypothesize that areas with more sanitation violations may also experience higher burglary rates due to lower social cohesion and reduced guardianship.
+
+### Learning Objectives
+
+By completing this analysis, I will demonstrate the ability to:
+
+1.  Create a fishnet grid to aggregate point-level crime and 311 data
+2.  Calculate spatial features from 311 complaint data
+3.  Diagnose spatial autocorrelation using Local Moran's I
+4.  Fit and interpret Poisson and Negative Binomial regression for count data
+5.  Implement spatial cross-validation (Leave-One-Group-Out)
+6.  Compare model predictions to a Kernel Density Estimation baseline
+7.  Evaluate model performance using appropriate metrics
+
+# Setup
+
+```{r setup}
+#| message: false
+#| warning: false
+
+# Load required packages
+library(tidyverse)      # Data manipulation
+library(sf)             # Spatial operations
+library(viridis)        # Color scales
+library(spdep)          # Spatial dependence
+library(FNN)            # Fast nearest neighbors
+library(MASS)           # Negative binomial regression
+library(patchwork)      # Plot composition
+library(knitr)          # Tables
+library(kableExtra)     # Table formatting
+library(lubridate)      # Date handling
+
+# Spatstat for KDE
+library(spatstat.geom)    # Spatial geometries
+library(spatstat.explore) # Spatial exploration/KDE
+
+# Set options
+options(scipen = 999)  # No scientific notation
+set.seed(2003)         # Reproducibility
+
+# Create consistent theme for visualizations
+theme_crime <- function(base_size = 11) {
+  theme_minimal(base_size = base_size) +
+    theme(
+      plot.title = element_text(face = "bold", size = base_size + 1),
+      plot.subtitle = element_text(color = "gray30", size = base_size - 1),
+      legend.position = "right",
+      panel.grid.minor = element_blank()
+    )
+}
+
+# Set as default
+theme_set(theme_crime())
+```
+
+# Part 1: Data Loading and Exploration
+
+## 1.1 Load Chicago Spatial Boundaries
+
+In this step, I load the administrative boundaries of Chicago. These boundaries are essential for spatial analysis as they provide the geographic reference framework. I use the Illinois State Plane coordinate system (ESRI:102271), which minimizes distortion in the Chicago area and uses feet as the unit of measurement.
+
+```{r load-boundaries}
+#| output: false
+# Load police districts (used for spatial cross-validation)
+policeDistricts <- 
+  st_read("https://data.cityofchicago.org/api/geospatial/24zt-jpfn?method=export&format=GeoJSON") %>%
+  st_transform('ESRI:102271') %>%
+  dplyr::select(District = dist_num)
+
+# Load police beats
+policeBeats <- 
+  st_read("https://data.cityofchicago.org/api/geospatial/n9it-hstw?method=export&format=GeoJSON") %>%
+  st_transform('ESRI:102271') %>%
+  dplyr::select(Beat = beat_num)
+
+# Load Chicago boundary
+chicagoBoundary <- 
+  st_read("https://raw.githubusercontent.com/urbanSpatial/Public-Policy-Analytics-Landing/master/DATA/Chapter5/chicagoBoundary.geojson") %>%
+  st_transform('ESRI:102271')
+```
+
+**Why ESRI:102271 Coordinate Reference System?**
+
+This coordinate system is particularly appropriate for Chicago because it minimizes spatial distortion in this region, uses feet as units, and allows for accurate distance calculations.
+
+## 1.2 Load 2017 Burglary Data
+
+In this step, I load the 2017 burglary data. These are the crimes we want to predict using sanitation complaint features.
+
+```{r load-burglaries}
+#| output: false
+# Load burglaries from local shapefile
+burglaries_2017 <- st_read("data/burglaries.shp") %>%
+  st_transform('ESRI:102271')
+
+```
+
+**Data Provenance Matters**
+
+These data are recorded by the Chicago Police Department. It's important to note that these data may have biases:
+
+-   Unreported burglaries (victims didn't call police)
+-   Incidents police chose not to record
+-   Downgraded offenses
+-   Spatial bias (more patrol = more recorded crime)
+
+## 1.3 Visualize Burglary Point Data
+
+In this step, I create two visualizations: a point map showing the location of each burglary, and a density plot showing the spatial concentration of burglaries.
+
+```{r visualize-burglaries}
+#| fig-width: 10
+#| fig-height: 5
+
+# Point map
+p1 <- ggplot() + 
+  geom_sf(data = chicagoBoundary, fill = "gray95", color = "gray60") +
+  geom_sf(data = burglaries_2017, color = "#d62828", size = 0.1, alpha = 0.4) +
+  labs(
+    title = "Burglary Locations",
+    subtitle = paste0("Chicago 2017, n = ", nrow(burglaries_2017))
+  ) +
+  theme_void()
+
+# Density surface
+p2 <- ggplot() + 
+  geom_sf(data = chicagoBoundary, fill = "gray95", color = "gray60") +
+  stat_density_2d_filled(
+    data = data.frame(st_coordinates(burglaries_2017)),
+    aes(X, Y),
+    alpha = 0.7,
+    bins = 8
+  ) +
+  scale_fill_viridis_d(
+    option = "plasma",
+    direction = -1,
+    guide = "none"
+  ) +
+  labs(
+    title = "Density Surface",
+    subtitle = "Kernel density estimation"
+  ) +
+  theme_void()
+
+# Combine plots
+p1 + p2 + 
+  plot_annotation(
+    title = "Spatial Distribution of Burglaries in Chicago"
+  )
+```
+
+**Observed Spatial Patterns**
+
+The visualizations reveal that burglaries are not uniformly distributed across Chicago. I observe that burglaries are concentrated in two areas of the city. These patterns may reflect differences in socioeconomic conditions, building types, or policing practices.
+
+# Part 2: Create Fishnet Grid
+
+## 2.1 Understanding the Fishnet
+
+A fishnet grid is a tool for converting irregular point data into regular grid cells. This allows us to:
+
+-   Aggregate count data
+-   Calculate spatial features
+-   Apply regression models
+
+I use a 500m × 500m grid, which provides a good balance between capturing spatial variation and maintaining sufficient sample sizes.
+
+```{r create-fishnet}
+# Create 500m x 500m grid
+fishnet <- st_make_grid(
+  chicagoBoundary,
+  cellsize = 500,  # 500 meters per cell
+  square = TRUE
+) %>%
+  st_sf() %>%
+  mutate(uniqueID = row_number())
+
+# Keep only cells that intersect Chicago
+fishnet <- fishnet[chicagoBoundary, ]
+
+```
+
+**Why Use a Regular Grid?**
+
+Using a regular grid rather than existing boundaries has several advantages: consistent cell sizes, avoids the Modifiable Areal Unit Problem (MAUP), and is independent of administrative boundaries. However, the disadvantage is that it may not align with meaningful social or economic boundaries.
+
+## 2.2 Aggregate Burglaries to Grid
+
+In this step, I count the number of burglaries in each grid cell. This converts point data into count data that can be used for regression modeling.
+
+```{r aggregate-burglaries}
+# Spatial join
+burglaries_fishnet <- st_join(burglaries_2017, fishnet, join = st_within) %>%
+  st_drop_geometry() %>%
+  group_by(uniqueID) %>%
+  summarize(countBurglaries = n())
+
+# Join back to fishnet
+fishnet <- fishnet %>%
+  left_join(burglaries_fishnet, by = "uniqueID") %>%
+  mutate(countBurglaries = replace_na(countBurglaries, 0))
+```
+
+## 2.3 Visualize Aggregated Counts
+
+```{r visualize-fishnet}
+#| fig-width: 8
+#| fig-height: 6
+
+# Visualize aggregated counts
+ggplot() +
+  geom_sf(data = fishnet, aes(fill = countBurglaries), color = NA) +
+  scale_fill_viridis_c(
+    name = "Burglaries",
+    option = "plasma",
+    trans = "sqrt"  # Square root transformation for better visualization
+  ) +
+  labs(
+    title = "Burglaries per Grid Cell",
+    subtitle = "500m × 500m grid, 2017"
+  ) +
+  theme_void()
+```
+
+**Count Distribution**
+
+Most grid cells have relatively few burglaries, but certain areas have significantly higher burglary counts. Using a square root transformation helps visualize this right-skewed distribution. The high percentage of zero-count cells suggests overdispersion.
+
+# Part 3: Load Sanitation Complaints as Predictor Variable
+
+## 3.1 Why Use Sanitation Complaints?
+
+Following "broken windows theory," sanitation code violations are signs of neighborhood disorder. Areas with more sanitation complaints may also experience higher burglary rates due to:
+
+-   Lower social cohesion
+-   Less community surveillance ("eyes on the street")
+-   Perception of neglect
+-   Reduced informal guardianship
+
+We'll use sanitation complaints as a predictor for burglaries, similar to how the class example used abandoned vehicles.
+
+## 3.2 Load 2017 Sanitation Complaints
+
+```{r load-sanitation}
+# Load 2017 sanitation complaints from local CSV file
+sanitation_2017 <- read_csv(
+  "data/311_Service_Requests_-_Sanitation_Code_Complaints_-_Historical_20251115.csv", 
+  show_col_types = FALSE
+) %>%
+  # Parse date and filter for 2017
+  mutate(date = mdy(`Creation Date`)) %>%
+  filter(year(date) == 2017) %>%
+  # Remove records without coordinates
+  filter(!is.na(Latitude) & !is.na(Longitude)) %>%
+  # Convert to spatial object
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>%
+  st_transform('ESRI:102271') %>%
+  mutate(date = as.Date(date))
+
+```
+
+**Critical Question About Data**
+
+These 311 complaints are reported by residents. Consider potential biases: Different neighborhoods may have different reporting rates, Digital divide may affect access to 311 system, Gentrifying areas may have higher complaint rates. Complaints reflect reporting behavior, not just actual conditions
+
+## 3.3 Visualize Relationship Between Sanitation and Burglaries
+
+```{r compare-sanitation-burglary}
+#| fig-width: 10
+#| fig-height: 4
+
+# Aggregate sanitation complaints to fishnet
+sanitation_fishnet <- st_join(sanitation_2017, fishnet, join = st_within) %>%
+  st_drop_geometry() %>%
+  group_by(uniqueID) %>%
+  summarize(countSanitation = n())
+
+# Join to fishnet
+fishnet <- fishnet %>%
+  left_join(sanitation_fishnet, by = "uniqueID") %>%
+  mutate(countSanitation = replace_na(countSanitation, 0))
+
+# Side-by-side comparison
+p1 <- ggplot() +
+  geom_sf(data = fishnet, aes(fill = countSanitation), color = NA) +
+  scale_fill_viridis_c(
+    name = "Count",
+    option = "magma",
+    trans = "sqrt"
+  ) +
+  labs(title = "Sanitation Complaints") +
+  theme_void()
+
+p2 <- ggplot() +
+  geom_sf(data = fishnet, aes(fill = countBurglaries), color = NA) +
+  scale_fill_viridis_c(
+    name = "Count",
+    option = "plasma",
+    trans = "sqrt"
+  ) +
+  labs(title = "Burglaries") +
+  theme_void()
+
+p1 + p2 +
+  plot_annotation(
+    title = "Are sanitation complaints and burglaries spatially correlated?"
+  )
+```
+
+**Visual Assessment**
+
+By comparing these two maps, we can see areas with high sanitation complaints also tend to have high burglary rates. Visual correlation provides initial evidence for our modeling approach, though we'll need regression to quantify the relationship while controlling for spatial effects.
+
+## 3.4 Calculate Sanitation Complaint Features
+
+Following the class example structure, we create three spatial features from sanitation complaints:
+
+```{r sanitation-features}
+# Feature 1: Count of sanitation complaints per cell (already calculated)
+# Feature 2: Mean distance to nearest 3 sanitation complaints
+# Handle cases where there are fewer complaints or infinite distances
+fishnet_coords <- st_coordinates(st_centroid(fishnet))
+sanitation_coords <- st_coordinates(sanitation_2017)
+
+if(nrow(sanitation_coords) >= 3) {
+  nn_result <- get.knnx(sanitation_coords, fishnet_coords, k = 3)
+  
+  fishnet <- fishnet %>%
+    mutate(
+      sanitation.nn = rowMeans(nn_result$nn.dist),
+      # Replace any infinite values with max finite value
+      sanitation.nn = ifelse(is.infinite(sanitation.nn), 
+                            max(sanitation.nn[is.finite(sanitation.nn)], na.rm = TRUE), 
+                            sanitation.nn),
+      # Scale to reasonable range (divide by 1000 to get in thousands of feet)
+      sanitation.nn = sanitation.nn / 1000
+    )
+} else {
+  fishnet <- fishnet %>%
+    mutate(sanitation.nn = 0)
+}
+
+# Feature 3: Distance to sanitation complaint hot spots
+# First, identify hot spots using Local Moran's I
+coords_mat <- as.matrix(fishnet_coords)
+neighbors <- knn2nb(knearneigh(coords_mat, k = 5))
+weights <- nb2listw(neighbors, style = "W", zero.policy = TRUE)
+
+local_moran_sanitation <- localmoran(fishnet$countSanitation, weights)
+
+fishnet <- fishnet %>%
+  mutate(
+    sanitation_moran_i = local_moran_sanitation[, 1],
+    sanitation_moran_p = local_moran_sanitation[, 5],
+    sanitation_moran_sig = sanitation_moran_p < 0.05,
+    sanitation_cluster = case_when(
+      !sanitation_moran_sig ~ "Not Significant",
+      countSanitation >= mean(countSanitation) & sanitation_moran_i > 0 ~ "High-High",
+      countSanitation < mean(countSanitation) & sanitation_moran_i > 0 ~ "Low-Low",
+      countSanitation >= mean(countSanitation) & sanitation_moran_i < 0 ~ "High-Low",
+      countSanitation < mean(countSanitation) & sanitation_moran_i < 0 ~ "Low-High"
+    )
+  )
+
+# Identify hot spots
+sanitation_hotspots <- fishnet %>%
+  filter(sanitation_cluster == "High-High")
+
+# Calculate distance to nearest hot spot
+if(nrow(sanitation_hotspots) > 0) {
+  fishnet <- fishnet %>%
+    mutate(
+      dist_to_sanitation_hotspot = as.numeric(st_distance(geometry, st_union(sanitation_hotspots))),
+      # Scale to thousands of feet
+      dist_to_sanitation_hotspot = dist_to_sanitation_hotspot / 1000
+    )
+} else {
+  fishnet <- fishnet %>%
+    mutate(dist_to_sanitation_hotspot = 0)
+}
+```
+
+**Three Features Explained**
+
+1.  **Count**: Direct measure of sanitation problems in the cell
+2.  **Nearest Neighbor Distance**: Local context - are you near sanitation issues? (scaled to thousands of feet)
+3.  **Distance to Hot Spots**: Proximity to concentrated disorder areas (scaled to thousands of feet)
+
+Note: We scale distances to thousands of feet to improve numerical stability in regression models.
+
+## 3.5 Visualize Sanitation Hot Spots
+
+```{r visualize-sanitation-hotspots}
+#| fig-width: 8
+#| fig-height: 6
+
+ggplot() +
+  geom_sf(data = fishnet, aes(fill = sanitation_cluster), color = NA) +
+  scale_fill_manual(
+    name = "Cluster Type",
+    values = c(
+      "High-High" = "#d7191c",
+      "Low-Low" = "#2c7bb6",
+      "High-Low" = "#fdae61",
+      "Low-High" = "#abd9e9",
+      "Not Significant" = "gray90"
+    )
+  ) +
+  labs(
+    title = "Sanitation Complaint Hot Spots (Local Moran's I)",
+    subtitle = "High-High clusters may predict higher burglary risk"
+  ) +
+  theme_void()
+```
+
+**Hot Spot Analysis Results**
+
+"High-High" clusters represent sanitation complaint hot spots - areas with high complaints surrounded by other high-complaint areas. These "disorder hot spots" are our key spatial feature. According to broken windows theory, these areas may also have elevated burglary risk.
+
+# Part 4: Kernel Density Estimation Baseline
+
+Before building complex models, we create a simple baseline using Kernel Density Estimation (KDE) based on burglaries. This represents the "null hypothesis" - burglaries happen where they happened before, with no other information.
+
+```{r kde-baseline}
+# Convert burglaries to ppp object for spatstat
+burglaries_ppp <- as.ppp(
+  st_coordinates(burglaries_2017),
+  W = as.owin(st_bbox(chicagoBoundary))
+)
+
+# Calculate KDE
+kde <- density.ppp(burglaries_ppp, sigma = 1000)
+
+# Extract KDE values to fishnet
+fishnet_centroids <- st_centroid(fishnet)
+coords <- st_coordinates(fishnet_centroids)
+
+# Use interp.im to extract values
+kde_interp <- interp.im(kde, x = coords[, "X"], y = coords[, "Y"])
+
+fishnet <- fishnet %>%
+  mutate(kde_value = kde_interp)
+
+# Visualize
+ggplot() +
+  geom_sf(data = fishnet, aes(fill = kde_value), color = NA) +
+  scale_fill_viridis_c(
+    name = "Density",
+    option = "plasma",
+    na.value = "grey90"
+  ) +
+  labs(
+    title = "Kernel Density Estimation Baseline (Burglaries)",
+    subtitle = "Simple density surface based on 2017 burglary locations"
+  ) +
+  theme_void()
+```
+
+**The Role of KDE Baseline**
+
+KDE provides a simple prediction: future burglaries will occur where past burglaries were dense. This is our benchmark. **Our complex model using sanitation features must outperform this simple baseline to justify its added complexity.**
+
+# Part 5: Count Regression Models
+
+## 5.1 Prepare Modeling Data
+
+First, we need to join police districts for spatial cross-validation and prepare our modeling dataset.
+
+```{r join-districts}
+# Remove any existing District columns to avoid duplicates
+fishnet <- fishnet %>%
+  dplyr::select(-matches("^District"))
+
+# Join police districts to fishnet
+fishnet <- fishnet %>%
+  st_join(policeDistricts, largest = TRUE)
+
+# Create modeling dataset - keep geometry first, then drop
+fishnet_model <- fishnet %>%
+  dplyr::filter(!is.na(District)) %>%
+  dplyr::filter(!is.na(countBurglaries)) %>%
+  dplyr::filter(!is.na(countSanitation))
+
+
+```
+
+```{r prepare-model-data}
+# Drop geometry and select variables
+fishnet_model <- fishnet_model %>%
+  st_drop_geometry() %>%
+  dplyr::select(
+    uniqueID,
+    District,
+    countBurglaries,
+    countSanitation,
+    sanitation.nn,
+    dist_to_sanitation_hotspot,
+    kde_value
+  ) %>%
+  # Remove any remaining problematic rows
+  filter(
+    is.finite(countBurglaries),
+    is.finite(countSanitation),
+    is.finite(sanitation.nn),
+    is.finite(dist_to_sanitation_hotspot)
+  )
+
+```
+
+## 5.2 Poisson Regression
+
+Poisson regression is the standard model for count data. We'll use three sanitation features to predict burglaries, following the class example structure.
+
+```{r poisson-model}
+# Fit Poisson regression with three features
+# Use log transformation for distance variables to improve numerical stability
+model_poisson <- glm(
+  countBurglaries ~ countSanitation + log(sanitation.nn + 0.1) + 
+    log(dist_to_sanitation_hotspot + 1),
+  data = fishnet_model,
+  family = "poisson"
+)
+
+# Summary
+summary(model_poisson)
+
+```
+
+**Three-Feature Model**
+
+Following the class example, we use three spatial features from sanitation complaints:
+
+1.  **countSanitation**: Direct count of sanitation complaints in the cell
+2.  **log(sanitation.nn)**: Log-transformed mean distance to 3 nearest complaints (local context)
+3.  **log(dist_to_sanitation_hotspot)**: Log-transformed distance to sanitation hot spots
+
+The log transformations improve numerical stability and capture diminishing spatial effects.
+
+## 5.3 Negative Binomial Regression
+
+Negative Binomial regression relaxes the Poisson model's assumption that mean equals variance, allowing for overdispersion (variance \> mean), which is common in crime data.
+
+```{r negbin-model}
+# Fit Negative Binomial regression with three features
+model_nb <- glm.nb(
+  countBurglaries ~ countSanitation + log(sanitation.nn + 0.1) + 
+    log(dist_to_sanitation_hotspot + 1),
+  data = fishnet_model
+)
+
+# Summary
+summary(model_nb)
+
+```
+
+**Why Negative Binomial?**
+
+Crime data typically exhibits overdispersion - the variance in burglary counts is much larger than the mean. The Negative Binomial model accounts for this, providing more accurate standard errors and better model fit.
+
+**Three-Feature Model Rationale**
+
+This model structure mirrors the class example with abandoned vehicles:
+
+1.  **Direct effect**: Count of disorder indicators (sanitation complaints)\
+2.  **Neighborhood effect**: Proximity to disorder (nearest complaints)
+3.  **Hot spot effect**: Distance to concentrated disorder areas
+
+Together, these features test different spatial mechanisms of the broken windows theory.
+
+## 5.4 Model Comparison
+
+```{r compare-models-aic}
+# Compare AIC
+comparison_df <- data.frame(
+  Model = c("Poisson", "Negative Binomial"),
+  AIC = c(AIC(model_poisson), AIC(model_nb)),
+  Parameters = c(length(coef(model_poisson)), length(coef(model_nb)) + 1)
+) %>%
+  arrange(AIC)
+
+kable(comparison_df, digits = 2, caption = "Model Comparison") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+**Which Model is Better?**
+
+Negative Binomial models perform better with crime count data because they allow for overdispersion, which is very common in real-world data where variance exceeds the mean.
+
+# Part 6: Spatial Cross-Validation (2017)
+
+## 6.1 Why Spatial Cross-Validation?
+
+Standard cross-validation randomly splits data. But with spatial data, this means training on cells right next to test cells (information leakage!). Leave-One-Group-Out (LOGO) cross-validation trains on all districts except one, then tests on the held-out district. This provides a more realistic assessment of how the model performs in new areas.
+
+```{r spatial-cv}
+# Get unique districts
+districts <- unique(fishnet_model$District)
+cv_results <- tibble()
+
+for (i in seq_along(districts)) {
+  
+  test_district <- districts[i]
+  
+  # Split data
+  train_data <- fishnet_model %>% filter(District != test_district)
+  test_data <- fishnet_model %>% filter(District == test_district)
+  
+  # Fit model on training data - three-feature model
+  model_cv <- glm.nb(
+    countBurglaries ~ countSanitation + log(sanitation.nn + 0.1) + 
+      log(dist_to_sanitation_hotspot + 1),
+    data = train_data
+  )
+  
+  # Predict on test data
+  test_data <- test_data %>%
+    mutate(
+      prediction = predict(model_cv, test_data, type = "response")
+    )
+  
+  # Calculate metrics
+  mae <- mean(abs(test_data$countBurglaries - test_data$prediction))
+  rmse <- sqrt(mean((test_data$countBurglaries - test_data$prediction)^2))
+  
+  # Store results
+  cv_results <- bind_rows(
+    cv_results,
+    tibble(
+      Fold = i,
+      Test_District = test_district,
+      N_Test = nrow(test_data),
+      MAE = mae,
+      RMSE = rmse
+    )
+  )
+}
+```
+
+## 6.2 Cross-Validation Results
+
+```{r cv-results-table}
+# Show results
+cv_results %>%
+  arrange(desc(MAE)) %>%
+  kable(
+    digits = 2,
+    caption = "LOGO Cross-Validation Results by District"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+**Importance of Spatial Cross-Validation**
+
+Spatial cross-validation prevents information leakage by testing the model on geographically separated areas. This better represents how the model would perform in new areas. The results show that some districts are harder to predict than others, which may reflect unique characteristics of those areas or data quality issues.
+
+# Part 7: Model Evaluation
+
+## 7.1 Generate Final Predictions
+
+In this step, I fit the final model on all 2017 data and generate predictions. I also compare these predictions to the simple KDE baseline.
+
+```{r final-predictions}
+# Fit final model on all data - three-feature model
+final_model <- glm.nb(
+  countBurglaries ~ countSanitation + log(sanitation.nn + 0.1) + 
+    log(dist_to_sanitation_hotspot + 1),
+  data = fishnet_model
+)
+
+# Add predictions back to fishnet
+fishnet <- fishnet %>%
+  mutate(
+    prediction_nb = predict(final_model, 
+                           fishnet_model[match(uniqueID, fishnet_model$uniqueID), ], 
+                           type = "response")
+  )
+
+# Normalize KDE predictions to same scale as counts
+kde_sum <- sum(fishnet$kde_value, na.rm = TRUE)
+count_sum <- sum(fishnet$countBurglaries, na.rm = TRUE)
+fishnet <- fishnet %>%
+  mutate(
+    prediction_kde = (kde_value / kde_sum) * count_sum
+  )
+```
+
+## 7.2 Compare Model vs. KDE Baseline
+
+```{r compare-predictions}
+#| fig-width: 12
+#| fig-height: 4
+
+# Create three maps
+p1 <- ggplot() +
+  geom_sf(data = fishnet, aes(fill = countBurglaries), color = NA) +
+  scale_fill_viridis_c(name = "Count", option = "plasma", limits = c(0, 20)) +
+  labs(title = "Actual Burglaries") +
+  theme_void()
+
+p2 <- ggplot() +
+  geom_sf(data = fishnet, aes(fill = prediction_nb), color = NA) +
+  scale_fill_viridis_c(name = "Predicted", option = "plasma", limits = c(0, 20)) +
+  labs(title = "Model Predictions (Sanitation Features)") +
+  theme_void()
+
+p3 <- ggplot() +
+  geom_sf(data = fishnet, aes(fill = prediction_kde), color = NA) +
+  scale_fill_viridis_c(name = "Predicted", option = "plasma", limits = c(0, 20)) +
+  labs(title = "KDE Baseline Predictions") +
+  theme_void()
+
+p1 + p2 + p3 +
+  plot_annotation(
+    title = "Actual vs. Predicted Burglaries"
+  )
+```
+
+## 7.3 Performance Metrics Comparison
+
+```{r model-comparison-metrics}
+# Calculate performance metrics
+comparison <- fishnet %>%
+  st_drop_geometry() %>%
+  filter(!is.na(prediction_nb), !is.na(prediction_kde)) %>%
+  summarize(
+    Model_MAE = mean(abs(countBurglaries - prediction_nb)),
+    Model_RMSE = sqrt(mean((countBurglaries - prediction_nb)^2)),
+    KDE_MAE = mean(abs(countBurglaries - prediction_kde)),
+    KDE_RMSE = sqrt(mean((countBurglaries - prediction_kde)^2))
+  )
+
+comparison %>%
+  pivot_longer(everything(), names_to = "Metric", values_to = "Value") %>%
+  separate(Metric, into = c("Approach", "Measure"), sep = "_") %>%
+  pivot_wider(names_from = Measure, values_from = Value) %>%
+  kable(
+    digits = 2,
+    caption = "Model Performance Comparison"
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+**Does the Sanitation Model Outperform the Simple KDE Baseline?**
+
+By comparing MAE and RMSE metrics, our model failed to outperform the KDE Baseline.
+
+## 7.4 Spatial Distribution of Prediction Errors
+
+```{r prediction-errors}
+#| fig-width: 10
+#| fig-height: 5
+
+# Calculate errors
+fishnet <- fishnet %>%
+  mutate(
+    error_nb = countBurglaries - prediction_nb,
+    abs_error_nb = abs(error_nb)
+  )
+
+# Map errors
+p1 <- ggplot() +
+  geom_sf(data = fishnet, aes(fill = error_nb), color = NA) +
+  scale_fill_gradient2(
+    name = "Error",
+    low = "#2166ac", mid = "white", high = "#b2182b",
+    midpoint = 0,
+    limits = c(-10, 10)
+  ) +
+  labs(title = "Model Errors (Actual - Predicted)") +
+  theme_void()
+
+p2 <- ggplot() +
+  geom_sf(data = fishnet, aes(fill = abs_error_nb), color = NA) +
+  scale_fill_viridis_c(name = "Abs. Error", option = "magma") +
+  labs(title = "Absolute Model Errors") +
+  theme_void()
+
+p1 + p2 +
+  plot_annotation(
+    title = "Spatial Patterns in Prediction Errors"
+  )
+```
+
+**Error Analysis**
+
+The error maps reveal important patterns in model performance. Signed errors (left) show a relatively balanced distribution of over-predictions (red) and under-predictions (blue) with no strong spatial bias. Absolute errors (right) are generally low across most of Chicago (dark areas), with occasional larger errors scattered throughout.
+
+The quasi-random distribution of errors, rather than clear spatial clustering, suggests the model captures the basic spatial structure of burglary patterns, even if it doesn't surpass the KDE baseline in overall accuracy.
+
+## 7.5 Model Coefficients Summary
+
+```{r model-summary-table}
+# Create summary table with formatted p-values
+model_summary <- broom::tidy(final_model, exponentiate = TRUE) %>%
+  mutate(
+    across(where(is.numeric), ~round(., 3)),
+    # Format p-values: show < 0.001 instead of 0
+    p.value = case_when(
+      p.value < 0.001 ~ "< 0.001",
+      TRUE ~ as.character(round(p.value, 3))
+    )
+  )
+
+model_summary %>%
+  kable(
+    caption = "Final Negative Binomial Model Coefficients (Exponentiated)",
+    col.names = c("Variable", "Rate Ratio", "Std. Error", "Z-value", "P-value")
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+**Coefficient Interpretation**
+
+The model includes three predictors, mirroring the class example structure:
+
+1.  **countSanitation**: Direct count effect
+    -   Rate Ratio \> 1: Each additional sanitation complaint increases expected burglary count
+    -   Tests the core broken windows theory prediction
+2.  **log(sanitation.nn)**: Neighborhood context effect
+    -   Measures local sanitation environment (distance to nearby complaints)
+    -   Negative coefficient: Being closer to sanitation issues predicts more burglaries
+    -   Log transformation captures diminishing effects at greater distances
+3.  **log(dist_to_sanitation_hotspot)**: Hot spot proximity effect
+    -   Distance to concentrated disorder areas
+    -   Negative coefficient: Being closer to hot spots predicts higher burglary risk
+    -   Tests whether spatial clustering of disorder matters beyond local effects
+
+# Conclusion and Reflection
+
+## Summary of Key Findings
+
+**Technical Performance:**
+
+-   Cross-validation mean MAE: `r round(mean(cv_results$MAE), 2)`
+-   Cross-validation mean RMSE: `r round(mean(cv_results$RMSE), 2)`
+-   Negative Binomial model outperforms Poisson in handling overdispersion
+
+**Spatial Patterns:**
+
+-   Both burglaries and sanitation complaints show clear clustering patterns across Chicago
+-   Hot spots of sanitation complaints are concentrated in certain areas
+-   The relationship between sanitation complaints and burglaries varies across the city
+
+**Model Performance:**
+
+Our model underperforms the KDE baseline (Model MAE: 2.12 vs KDE: 1.93; Model RMSE: 3.22 vs KDE: 2.82). This indicates that sanitation complaints do not predict burglaries better than simple spatial smoothing. While individual spatial features show significance, their combined predictive power is insufficient to justify the added model complexity over the naive baseline approach.
+
+## Model Limitations
+
+1.  **Data Bias**: Both crime data and 311 complaints reflect reporting behavior, not just actual conditions. Areas with more active community engagement may have higher report rates.
+
+2.  **Overdispersion**: The data shows significant overdispersion, which is why the Negative Binomial model is more appropriate than Poisson.
+
+3.  **Zero Inflation**: Approximately `r round(100 * sum(fishnet$countBurglaries == 0) / nrow(fishnet), 1)`% of grid cells have no burglaries, which may warrant a zero-inflated model.
+
+4.  **Spatial Autocorrelation**: Although we used spatial features, spatial autocorrelation may still exist in the residuals.
+
+5.  **Temporal Assumption**: This model assumes the relationship between sanitation and burglaries is stable over time, which may not hold.
+
+6.  **Scale Sensitivity**: We scaled distance variables to improve model convergence, which affects coefficient interpretation.
+
+## Policy Implications
+
+When using such predictive models for resource allocation or intervention decisions, it's essential to recognize:
+
+-   **Reporting Bias**: Systematic differences in reporting rates may exist across communities
+-   **Causal vs. Correlation**: Association between sanitation and burglaries doesn't prove causation
+-   **Potential for Feedback Loops**: Increased enforcement in predicted areas may generate more reports
+-   **Equity Concerns**: Models based on historical data may perpetuate existing inequalities
+
+## Future Improvement Directions
+
+1.  Incorporate demographic and socioeconomic variables (income, education, housing tenure)
+2.  Add land use and built environment features (commercial density, street connectivity)
+3.  Analyze temporal trends and seasonal patterns
+4.  Test for spatial autocorrelation in model residuals
+5.  Consider zero-inflated models to better handle excess zeros
+6.  Conduct temporal validation on 2018 data to test model stability
+7.  Explore non-linear relationships between predictors and burglary counts
+8.  Include additional 311 complaint types (graffiti, abandoned vehicles, street lights)
