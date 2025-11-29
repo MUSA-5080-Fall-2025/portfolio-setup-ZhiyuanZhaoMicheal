@@ -30,6 +30,8 @@ website:
             text: "Assignment 2: Data Cleaning and Visualization"
           - href: Assignments/assignment_4/Zhiyuan_Zhao_assignment4.qmd
             text: "Assignment 4: Spatial Predictive Analysis: Predicting Burglaries Using Sanitation Complaints"
+          - href: Assignments/assignment_5/Zhiyuan_Zhao_assignment5.qmd
+            text: "Assignment 5: Space-Time Prediction of Bike Share Demand: Philadelphia Indego - Q2 2024"
     
          
           
