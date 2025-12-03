@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-10-14">
+<meta name="dcterms.date" content="2025-11-24">
 
-<title>Week 6 Notes - Spatial Machine Learning &amp; Advanced Regression – Zhiyuan - MUSA 5080 Portfolio</title>
+<title>Week 12 Notes - Mapping the DNA of Urban Neighborhoods – Zhiyuan - MUSA 5080 Portfolio</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +19,41 @@ ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
 width: 0.8em;
 margin: 0 0.8em 0.2em -1em;  vertical-align: middle;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+}
+pre.numberSource { margin-left: 3em; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -3938,7 +3973,7 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Week 6 Notes - Spatial Machine Learning &amp; Advanced Regression</h1>
+<h1 class="title">Week 12 Notes - Mapping the DNA of Urban Neighborhoods</h1>
 </div>
 
 
@@ -3949,7 +3984,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 14, 2025</p>
+      <p class="date">November 24, 2025</p>
     </div>
   </div>
   
@@ -3961,33 +3996,76 @@ vertical-align: -.125em;
 </header>
 
 
-<p>Summary of Week 6 Lecture: Spatial Machine Learning &amp; Advanced Regression ￼</p>
-<p>⸻</p>
+<p>Week 12 Summary — Mapping the DNA of Urban Neighborhoods (K-means Clustering &amp; Sequence Analysis)</p>
 <ol type="1">
-<li>Baseline Model Building • Began with a simple linear regression predicting SalePrice from LivingArea (structural feature only). • Coefficient: each extra sq ft adds ≈ $216. • R² ≈ 0.13 → explains only 13% of variation. • Missing factors: location, amenities, neighborhood quality, crime, schools.</li>
+<li><p>Overview: Neighborhood Change Analysis • Goal: Understand how neighborhoods evolve over time (1980-2020). • Approach: Classify neighborhood types, then track their trajectories. • Key question: Do neighborhoods follow predictable pathways of change?</p></li>
+<li><p>Observed Neighborhood Pathways • Upgrading paths: Struggling → Young urban (gentrification), Blue collar → Young urban (densification), Suburban → Elite suburban. • Declining paths: Suburban → Blue collar (suburban decline), Blue collar → Struggling (continued decline). • Most common: Stability at extremes (no change).</p></li>
+<li><p>Methodological Workflow: 5 Main Steps • Step 1: K-means Clustering — Classify neighborhoods into types. • Step 2: Create Sequences — Build trajectories over time. • Step 3: Measure Dissimilarity — Compare sequence similarity. • Step 4: Cluster Sequences — Group similar trajectories. • Step 5: Visualize — Map and interpret results.</p></li>
+<li><p>Step 1: K-means Clustering • Definition: Unsupervised ML algorithm that groups observations into k clusters based on similarity. • Algorithm: • Initialize: Randomly place k centroids. • Assign: Each observation → nearest centroid (Euclidean distance). • Update: Recalculate centroid positions (mean of assigned points). • Repeat: Until assignments stop changing (convergence). • Why unsupervised? We don’t tell the algorithm what makes a “gentrifying” neighborhood — it discovers patterns.</p></li>
+<li><p>K-means for Neighborhoods • Input variables: Socioeconomic (% college, unemployment, poverty), Housing (home value, owner-occupied, age), Demographic (recent movers, vacancy, seniors, children). • Why standardize (z-score)? Compare relative position within metro over time. • Key decision: Cluster ALL years together → ensures temporal consistency.</p></li>
+<li><p>Choosing K (Number of Clusters) • Mathematical optimum ≠ Substantive optimum. • Common metrics: • Within-cluster sum of squares (WSS): Lower is better, always decreases. • Silhouette width: How well observations fit their cluster (0-1, higher is better). • Elbow method: Look for the “bend” in WSS plot. • Ultimately: Choose k that makes theoretical sense and tells meaningful story. • Example: NYC analysis found optimal k=3, but used k=6 for more nuance.</p></li>
+<li><p>K-means in R</p></li>
 </ol>
-<p>⸻</p>
-<ol start="2" type="1">
-<li>Adding Predictors • Adding number of bathrooms increased R² slightly (to 0.14). • Demonstrated diminishing returns from structural-only models. • Emphasized the need for spatial variables to capture “location, location, location.”</li>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardize variables</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>census_scaled <span class="ot">&lt;-</span> census_data <span class="sc">%&gt;%</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), scale))</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Run k-means</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>kmeans_result <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(census_scaled, <span class="at">centers =</span> <span class="dv">6</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Add cluster assignments</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>census_data<span class="sc">$</span>cluster <span class="ot">&lt;-</span> kmeans_result<span class="sc">$</span>cluster</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ol start="8" type="1">
+<li><p>Step 2: Create Sequences • Before: Each tract has 5 separate cluster assignments (1980, 1990, 2000, 2010, 2020). • After: Each tract has one sequence describing its trajectory. • Example: White → White → Hispanic → Hispanic → Hispanic • Result: Each neighborhood has a “signature” of change over time.</p></li>
+<li><p>Creating Sequences with TraMineR</p></li>
 </ol>
-<p>⸻</p>
-<ol start="3" type="1">
-<li>Introducing Spatial Data • Converted tabular data to spatial (sf) format using coordinates. • Transformed CRS from EPSG:4326 to MA State Plane for accurate distance measures. • Joined parcels with neighborhood polygons using st_join(). • Visualized median prices by neighborhood, showing clear spatial clustering: • Back Bay, Beacon Hill, South End highest. • Dorchester, Roxbury, Mattapan lowest.</li>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(TraMineR)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Reshape to wide format</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>census_wide <span class="ot">&lt;-</span> census_data <span class="sc">%&gt;%</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(tract, year, cluster) <span class="sc">%&gt;%</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> year, <span class="at">values_from =</span> cluster)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Define sequence object</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>seq_data <span class="ot">&lt;-</span> <span class="fu">seqdef</span>(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  census_wide,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">var =</span> <span class="fu">c</span>(<span class="st">&quot;1980&quot;</span>, <span class="st">&quot;1990&quot;</span>, <span class="st">&quot;2000&quot;</span>, <span class="st">&quot;2010&quot;</span>, <span class="st">&quot;2020&quot;</span>),</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;White&quot;</span>, <span class="st">&quot;Black&quot;</span>, <span class="st">&quot;Hispanic&quot;</span>, <span class="st">&quot;Asian&quot;</span>, <span class="st">&quot;Black/Hisp&quot;</span>, <span class="st">&quot;White Mixed&quot;</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ol start="10" type="1">
+<li><p>Step 3: Measure Sequence Dissimilarity • Challenge: How do we measure similarity between sequences? • Optimal Matching (OM): Counts minimum “edits” to transform one sequence into another (Insert, Delete, Substitute). • OMstrans: Focuses on sequences of TRANSITIONS, not just states. • Key difference: “White→Hispanic→Asian” ≠ “White→Asian→Hispanic”. • OMstrans captures WHEN transitions happened (early vs late).</p></li>
+<li><p>Computing OMstrans Dissimilarity</p></li>
 </ol>
-<p>⸻</p>
-<ol start="4" type="1">
-<li>Regression with Categorical (Dummy) Variables • Used neighborhood name (name) as a factor. • R automatically creates dummy variables for each neighborhood. • One neighborhood (Allston) becomes the reference category. • Model interpretation: • Positive coefficient → more expensive than Allston. • Negative coefficient → cheaper than Allston. • Example: identical houses differ by millions between Back Bay ($8.5M) and Roxbury ($0.33M).</li>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate transition-based substitution costs</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>submat <span class="ot">&lt;-</span> <span class="fu">seqsubm</span>(seq_data, <span class="at">method =</span> <span class="st">&quot;TRATE&quot;</span>, <span class="at">transition =</span> <span class="st">&quot;both&quot;</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute OMstrans dissimilarity</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>dist_omstrans <span class="ot">&lt;-</span> <span class="fu">seqdist</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  seq_data,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&quot;OMstrans&quot;</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">indel =</span> <span class="dv">1</span>,       <span class="co"># insertion/deletion cost</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">sm =</span> submat,     <span class="co"># substitution cost matrix</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">otto =</span> <span class="fl">0.1</span>       <span class="co"># origin-transition tradeoff (lower = emphasize sequencing)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>•   Output: Matrix of pairwise distances between all sequences.</code></pre>
+<ol start="12" type="1">
+<li><p>Understanding Cost Parameters • indel = 1: Cost for insertion/deletion operations. • otto = 0.1: Origin-transition tradeoff (lower values emphasize sequencing). • Substitution costs: Based on transition frequencies (rare transitions = high cost).</p></li>
+<li><p>Step 4: Cluster Similar Sequences • Method: Hierarchical clustering using Ward’s method. • How it works: • Start with each sequence as its own cluster. • Find two most similar clusters, merge them. • Repeat until all sequences in one cluster. • Cut dendrogram at desired number of clusters. • Ward’s method: Minimizes within-cluster variance at each merge.</p></li>
+<li><p>Hierarchical Clustering in R</p></li>
 </ol>
-<p>⸻</p>
-<ol start="5" type="1">
-<li>Interaction Effects • Question: does square footage matter equally in all areas? • Built interaction models: • Model 1 (no interaction): same slope everywhere. • Model 2 (interaction): slope differs by neighborhood wealth. • Defined “wealthy neighborhoods” = Back Bay, Beacon Hill, South End, Bay Village. • Result: • Wealthy areas have much steeper slopes (≈ $985/sq ft vs. $95 in others). • Confirms Luxury Premium Hypothesis — larger homes in wealthy areas command disproportionate premiums.</li>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Hierarchical clustering</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>hclust_result <span class="ot">&lt;-</span> <span class="fu">hclust</span>(dist_omstrans, <span class="at">method =</span> <span class="st">&quot;ward.D2&quot;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Cut into desired number of clusters</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>trajectory_clusters <span class="ot">&lt;-</span> <span class="fu">cutree</span>(hclust_result, <span class="at">k =</span> <span class="dv">6</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Add to data</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>census_wide<span class="sc">$</span>trajectory <span class="ot">&lt;-</span> trajectory_clusters</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ol start="15" type="1">
+<li><p>Choosing Number of Trajectory Clusters • Unlike k-means, no clear mathematical optimum. • Approach: Cut at different levels, examine interpretability. • Goal: Groups that tell meaningful stories about neighborhood change.</p></li>
+<li><p>Visualizing Trajectory Clusters • Sequence index plots: Show all sequences in each cluster. • State distribution plots: Show composition over time. • Maps: Spatial distribution of trajectory types.</p></li>
+<li><p>Key Takeaways • K-means clustering: Unsupervised method to classify neighborhoods into types. • Choosing k is more art than science — prioritize interpretability. • Sequence analysis: Captures the PROCESS of change over time. • OMstrans: Emphasizes ordering of transitions (when change happened matters). • Hierarchical clustering: Groups similar trajectories without pre-specifying k. • Neighborhoods tend to be stable at extremes; middle categories show more mobility.</p></li>
 </ol>
-<p>⸻</p>
-<ol start="6" type="1">
-<li>Conceptual Takeaways • Spatial features and fixed effects are critical to avoid biased estimates. • Spatial autocorrelation violates OLS independence assumptions. • Remedies: include location terms, fixed effects, or spatial regression models. • Understanding geography improves both predictive accuracy and policy relevance in housing analytics.</li>
-</ol>
-<p>⸻</p>
-<p>Key Terms: baseline model, dummy variable, fixed effects, interaction term, spatial join, CRS transformation, hedonic model, Tobler’s First Law, spatial autocorrelation.</p>
 
 
 

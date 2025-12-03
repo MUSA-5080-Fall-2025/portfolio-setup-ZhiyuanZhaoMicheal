@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-10-14">
+<meta name="dcterms.date" content="2025-11-03">
 
-<title>Week 6 Notes - Spatial Machine Learning &amp; Advanced Regression – Zhiyuan - MUSA 5080 Portfolio</title>
+<title>Week 9 Notes - Critical Perspectives on Predictive Policing – Zhiyuan - MUSA 5080 Portfolio</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -3938,7 +3938,7 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Week 6 Notes - Spatial Machine Learning &amp; Advanced Regression</h1>
+<h1 class="title">Week 9 Notes - Critical Perspectives on Predictive Policing</h1>
 </div>
 
 
@@ -3949,7 +3949,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 14, 2025</p>
+      <p class="date">November 3, 2025</p>
     </div>
   </div>
   
@@ -3961,33 +3961,21 @@ vertical-align: -.125em;
 </header>
 
 
-<p>Summary of Week 6 Lecture: Spatial Machine Learning &amp; Advanced Regression ￼</p>
-<p>⸻</p>
+<p>Week 9 Summary — Critical Perspectives on Predictive Policing</p>
 <ol type="1">
-<li>Baseline Model Building • Began with a simple linear regression predicting SalePrice from LivingArea (structural feature only). • Coefficient: each extra sq ft adds ≈ $216. • R² ≈ 0.13 → explains only 13% of variation. • Missing factors: location, amenities, neighborhood quality, crime, schools.</li>
+<li><p>Opening Question • Before asking HOW to build predictive policing systems, ask: SHOULD we? • A statistically “good” model can still be socially harmful. • Both technical skills AND critical evaluation are essential for ethical data science.</p></li>
+<li><p>The Sales Pitch vs Reality • Vendor claims: Efficiency, objectivity, proactivity, data-driven. • Critical assumptions that often fail: • Crime data accurately reflects crime (it doesn’t). • Past patterns predict future crime (they might just predict policing). • We can separate “good” from “bad” data (we often can’t). • Technical solutions can fix social problems (they can’t).</p></li>
+<li><p>The Dirty Data Problem • Traditional definition: Missing data, incorrect data, non-standardized formats. • Extended definition (Richardson et al. 2019): Data derived from or influenced by corrupt, biased, and unlawful practices. • Forms of dirty data: • Fabricated/Manipulated: False arrests, downgraded crime classifications (“juking the stats”). • Systematically Biased: Over-policing certain communities, under-policing white-collar crime. • Missing/Incomplete: Unreported crimes, ignored complaints. • Proxy Problems: Arrests ≠ crimes committed; calls for service ≠ actual need.</p></li>
+<li><p>Case Studies • Baltimore: 14,000+ serious assaults misrecorded, Gun Trace Task Force corruption, officers robbing residents and planting evidence. • NYPD CompStat: Pressure led to stat manipulation, downgrading serious crimes, persuading victims not to file reports. • The Feedback Loop: Algorithm predicts crime in area X → Police sent to X → More arrests in X → Algorithm “confirmed” → Cycle intensifies.</p></li>
+<li><p>Why “Cleaning” Data Isn’t Enough • Crime reports reflect police decisions (what to investigate, classify, document). • Calls for service reflect community bias (e.g., gentrification → increased 311 calls). • Crime data is always: Socially constructed, selectively enforced, organizationally filtered, politically shaped. • Crime data doesn’t reveal “crime” — it reveals policing patterns.</p></li>
+<li><p>Consequences and Harms • False Positives (predicted high risk, no crime): Increased harassment, trauma, broken trust, economic harm. • False Negatives (predicted low risk, crime occurs): Inadequate police response, unequal protection. • Both types disproportionately affect Black/Brown communities.</p></li>
+<li><p>Consent Decrees: Limitations • Typical reforms: Training, oversight, use-of-force policies, data collection. • What they DON’T address: Historical dirty data, ongoing use in algorithms, vendor accountability, public transparency.</p></li>
+<li><p>Framework for Critical Evaluation • Data Provenance: What time period? Civil rights investigations during that period? Evidence data is accurate? • Variable Selection: What variables used? How might each embed bias? What’s excluded? • Validation: How is accuracy measured? Error rates by neighborhood? Who experiences false positives vs negatives? • Deployment: How do predictions translate to action? What discretion do officers have? • Transparency &amp; Accountability: Is methodology public? Can individuals challenge predictions? • Alternatives: What non-punitive interventions were considered?</p></li>
+<li><p>Technical Foundations: Local Spatial Autocorrelation • Global Moran’s I: One value for entire study area — “Is there clustering overall?” • Local Moran’s I (LISA): One value per location — “Where are the clusters?” • Four cluster types: • High-High: Hotspot (high crime surrounded by high crime). • Low-Low: Coldspot (low crime surrounded by low crime). • High-Low: Outlier (isolated high). • Low-High: Outlier (isolated low). • Statistical significance: Use permutation test (999 permutations) to identify real clusters.</p></li>
+<li><p>Spatial Weights Matrix • Define “neighbors” using: Contiguity (Queen/Rook), Distance threshold, K-nearest neighbors. • Row standardization (style = “W”): Each row sums to 1, makes cells comparable regardless of number of neighbors.</p></li>
+<li><p>Count Regression: Poisson and Negative Binomial • Poisson Regression: For count data; assumes variance = mean. • Overdispersion: When variance &gt; mean (common in crime data). • Check: Dispersion = Residual Deviance / Degrees of Freedom; if &gt; 1.5, use Negative Binomial. • Negative Binomial: Adds dispersion parameter; Var(Y) = μ + αμ²; accommodates overdispersion. • Compare models using AIC (lower is better).</p></li>
+<li><p>Key Takeaways • Before asking “Does it work?”, ask “Should we be doing this at all?” • A system that accurately predicts where over-policing will occur is “accurate” but not necessarily just. • Technical fixes cannot solve fundamentally social problems. • Both technical competence and ethical reflection are essential.</p></li>
 </ol>
-<p>⸻</p>
-<ol start="2" type="1">
-<li>Adding Predictors • Adding number of bathrooms increased R² slightly (to 0.14). • Demonstrated diminishing returns from structural-only models. • Emphasized the need for spatial variables to capture “location, location, location.”</li>
-</ol>
-<p>⸻</p>
-<ol start="3" type="1">
-<li>Introducing Spatial Data • Converted tabular data to spatial (sf) format using coordinates. • Transformed CRS from EPSG:4326 to MA State Plane for accurate distance measures. • Joined parcels with neighborhood polygons using st_join(). • Visualized median prices by neighborhood, showing clear spatial clustering: • Back Bay, Beacon Hill, South End highest. • Dorchester, Roxbury, Mattapan lowest.</li>
-</ol>
-<p>⸻</p>
-<ol start="4" type="1">
-<li>Regression with Categorical (Dummy) Variables • Used neighborhood name (name) as a factor. • R automatically creates dummy variables for each neighborhood. • One neighborhood (Allston) becomes the reference category. • Model interpretation: • Positive coefficient → more expensive than Allston. • Negative coefficient → cheaper than Allston. • Example: identical houses differ by millions between Back Bay ($8.5M) and Roxbury ($0.33M).</li>
-</ol>
-<p>⸻</p>
-<ol start="5" type="1">
-<li>Interaction Effects • Question: does square footage matter equally in all areas? • Built interaction models: • Model 1 (no interaction): same slope everywhere. • Model 2 (interaction): slope differs by neighborhood wealth. • Defined “wealthy neighborhoods” = Back Bay, Beacon Hill, South End, Bay Village. • Result: • Wealthy areas have much steeper slopes (≈ $985/sq ft vs. $95 in others). • Confirms Luxury Premium Hypothesis — larger homes in wealthy areas command disproportionate premiums.</li>
-</ol>
-<p>⸻</p>
-<ol start="6" type="1">
-<li>Conceptual Takeaways • Spatial features and fixed effects are critical to avoid biased estimates. • Spatial autocorrelation violates OLS independence assumptions. • Remedies: include location terms, fixed effects, or spatial regression models. • Understanding geography improves both predictive accuracy and policy relevance in housing analytics.</li>
-</ol>
-<p>⸻</p>
-<p>Key Terms: baseline model, dummy variable, fixed effects, interaction term, spatial join, CRS transformation, hedonic model, Tobler’s First Law, spatial autocorrelation.</p>
 
 
 

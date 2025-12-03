@@ -1,0 +1,150 @@
+---
+title: "Week 12 Notes - Mapping the DNA of Urban Neighborhoods"
+date: "2025-11-24"
+---
+
+
+Week 12 Summary — Mapping the DNA of Urban Neighborhoods (K-means Clustering & Sequence Analysis)
+
+1. Overview: Neighborhood Change Analysis
+	•	Goal: Understand how neighborhoods evolve over time (1980-2020).
+	•	Approach: Classify neighborhood types, then track their trajectories.
+	•	Key question: Do neighborhoods follow predictable pathways of change?
+
+2. Observed Neighborhood Pathways
+	•	Upgrading paths: Struggling → Young urban (gentrification), Blue collar → Young urban (densification), Suburban → Elite suburban.
+	•	Declining paths: Suburban → Blue collar (suburban decline), Blue collar → Struggling (continued decline).
+	•	Most common: Stability at extremes (no change).
+
+3. Methodological Workflow: 5 Main Steps
+	•	Step 1: K-means Clustering — Classify neighborhoods into types.
+	•	Step 2: Create Sequences — Build trajectories over time.
+	•	Step 3: Measure Dissimilarity — Compare sequence similarity.
+	•	Step 4: Cluster Sequences — Group similar trajectories.
+	•	Step 5: Visualize — Map and interpret results.
+
+4. Step 1: K-means Clustering
+	•	Definition: Unsupervised ML algorithm that groups observations into k clusters based on similarity.
+	•	Algorithm:
+	•	Initialize: Randomly place k centroids.
+	•	Assign: Each observation → nearest centroid (Euclidean distance).
+	•	Update: Recalculate centroid positions (mean of assigned points).
+	•	Repeat: Until assignments stop changing (convergence).
+	•	Why unsupervised? We don't tell the algorithm what makes a "gentrifying" neighborhood — it discovers patterns.
+
+5. K-means for Neighborhoods
+	•	Input variables: Socioeconomic (% college, unemployment, poverty), Housing (home value, owner-occupied, age), Demographic (recent movers, vacancy, seniors, children).
+	•	Why standardize (z-score)? Compare relative position within metro over time.
+	•	Key decision: Cluster ALL years together → ensures temporal consistency.
+
+6. Choosing K (Number of Clusters)
+	•	Mathematical optimum ≠ Substantive optimum.
+	•	Common metrics:
+	•	Within-cluster sum of squares (WSS): Lower is better, always decreases.
+	•	Silhouette width: How well observations fit their cluster (0-1, higher is better).
+	•	Elbow method: Look for the "bend" in WSS plot.
+	•	Ultimately: Choose k that makes theoretical sense and tells meaningful story.
+	•	Example: NYC analysis found optimal k=3, but used k=6 for more nuance.
+
+7. K-means in R
+```r
+# Standardize variables
+census_scaled <- census_data %>%
+  mutate(across(where(is.numeric), scale))
+
+# Run k-means
+kmeans_result <- kmeans(census_scaled, centers = 6, nstart = 25)
+
+# Add cluster assignments
+census_data$cluster <- kmeans_result$cluster
+```
+
+8. Step 2: Create Sequences
+	•	Before: Each tract has 5 separate cluster assignments (1980, 1990, 2000, 2010, 2020).
+	•	After: Each tract has one sequence describing its trajectory.
+	•	Example: White → White → Hispanic → Hispanic → Hispanic
+	•	Result: Each neighborhood has a "signature" of change over time.
+
+9. Creating Sequences with TraMineR
+```r
+library(TraMineR)
+
+# Reshape to wide format
+census_wide <- census_data %>%
+  select(tract, year, cluster) %>%
+  pivot_wider(names_from = year, values_from = cluster)
+
+# Define sequence object
+seq_data <- seqdef(
+  census_wide,
+  var = c("1980", "1990", "2000", "2010", "2020"),
+  labels = c("White", "Black", "Hispanic", "Asian", "Black/Hisp", "White Mixed")
+)
+```
+
+10. Step 3: Measure Sequence Dissimilarity
+	•	Challenge: How do we measure similarity between sequences?
+	•	Optimal Matching (OM): Counts minimum "edits" to transform one sequence into another (Insert, Delete, Substitute).
+	•	OMstrans: Focuses on sequences of TRANSITIONS, not just states.
+	•	Key difference: "White→Hispanic→Asian" ≠ "White→Asian→Hispanic".
+	•	OMstrans captures WHEN transitions happened (early vs late).
+
+11. Computing OMstrans Dissimilarity
+```r
+# Calculate transition-based substitution costs
+submat <- seqsubm(seq_data, method = "TRATE", transition = "both")
+
+# Compute OMstrans dissimilarity
+dist_omstrans <- seqdist(
+  seq_data,
+  method = "OMstrans",
+  indel = 1,       # insertion/deletion cost
+  sm = submat,     # substitution cost matrix
+  otto = 0.1       # origin-transition tradeoff (lower = emphasize sequencing)
+)
+```
+	•	Output: Matrix of pairwise distances between all sequences.
+
+12. Understanding Cost Parameters
+	•	indel = 1: Cost for insertion/deletion operations.
+	•	otto = 0.1: Origin-transition tradeoff (lower values emphasize sequencing).
+	•	Substitution costs: Based on transition frequencies (rare transitions = high cost).
+
+13. Step 4: Cluster Similar Sequences
+	•	Method: Hierarchical clustering using Ward's method.
+	•	How it works:
+	•	Start with each sequence as its own cluster.
+	•	Find two most similar clusters, merge them.
+	•	Repeat until all sequences in one cluster.
+	•	Cut dendrogram at desired number of clusters.
+	•	Ward's method: Minimizes within-cluster variance at each merge.
+
+14. Hierarchical Clustering in R
+```r
+# Hierarchical clustering
+hclust_result <- hclust(dist_omstrans, method = "ward.D2")
+
+# Cut into desired number of clusters
+trajectory_clusters <- cutree(hclust_result, k = 6)
+
+# Add to data
+census_wide$trajectory <- trajectory_clusters
+```
+
+15. Choosing Number of Trajectory Clusters
+	•	Unlike k-means, no clear mathematical optimum.
+	•	Approach: Cut at different levels, examine interpretability.
+	•	Goal: Groups that tell meaningful stories about neighborhood change.
+
+16. Visualizing Trajectory Clusters
+	•	Sequence index plots: Show all sequences in each cluster.
+	•	State distribution plots: Show composition over time.
+	•	Maps: Spatial distribution of trajectory types.
+
+17. Key Takeaways
+	•	K-means clustering: Unsupervised method to classify neighborhoods into types.
+	•	Choosing k is more art than science — prioritize interpretability.
+	•	Sequence analysis: Captures the PROCESS of change over time.
+	•	OMstrans: Emphasizes ordering of transitions (when change happened matters).
+	•	Hierarchical clustering: Groups similar trajectories without pre-specifying k.
+	•	Neighborhoods tend to be stable at extremes; middle categories show more mobility.

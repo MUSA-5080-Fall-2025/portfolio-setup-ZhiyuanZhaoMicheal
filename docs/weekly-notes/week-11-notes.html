@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-10-14">
+<meta name="dcterms.date" content="2025-11-17">
 
-<title>Week 6 Notes - Spatial Machine Learning &amp; Advanced Regression – Zhiyuan - MUSA 5080 Portfolio</title>
+<title>Week 11 Notes - Space-Time Prediction – Zhiyuan - MUSA 5080 Portfolio</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +19,41 @@ ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
 width: 0.8em;
 margin: 0 0.8em 0.2em -1em;  vertical-align: middle;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+}
+pre.numberSource { margin-left: 3em; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -3938,7 +3973,7 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Week 6 Notes - Spatial Machine Learning &amp; Advanced Regression</h1>
+<h1 class="title">Week 11 Notes - Space-Time Prediction</h1>
 </div>
 
 
@@ -3949,7 +3984,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 14, 2025</p>
+      <p class="date">November 17, 2025</p>
     </div>
   </div>
   
@@ -3961,33 +3996,60 @@ vertical-align: -.125em;
 </header>
 
 
-<p>Summary of Week 6 Lecture: Spatial Machine Learning &amp; Advanced Regression ￼</p>
-<p>⸻</p>
+<p>Week 11 Summary — Space-Time Prediction (Bike Share Demand Forecasting)</p>
 <ol type="1">
-<li>Baseline Model Building • Began with a simple linear regression predicting SalePrice from LivingArea (structural feature only). • Coefficient: each extra sq ft adds ≈ $216. • R² ≈ 0.13 → explains only 13% of variation. • Missing factors: location, amenities, neighborhood quality, crime, schools.</li>
+<li><p>The Space-Time Challenge • Real-world problem: Bike rebalancing — how to get bikes where they’ll be needed BEFORE demand hits. • Operational question: “At 6:00 AM, which stations will run out of bikes by 8:00 AM?” • Must predict demand in BOTH space AND time.</p></li>
+<li><p>What Makes This Different • Previous weeks (5-7): Cross-sectional prediction (predict house prices at one point in time). • This week: Panel data — same stations observed over time. • New features: Temporal lags (what happened last hour?), space-time interaction.</p></li>
+<li><p>Panel Data Structure • Definition: Data that follows the same units over multiple time periods. • Cross-sectional: Each row = one observation (one snapshot in time). • Panel: Each row = unit × time period (repeated observations). • Example: Station × hour combinations. • Key insight: Can see how demand changes WITHIN stations over time.</p></li>
+<li><p>Binning Data into Time Intervals • Why bin? Raw trip data has unique timestamps; need uniform intervals for aggregation. • Hourly binning: All trips between 8:00-8:59 AM → “08:00” bin.</p></li>
 </ol>
-<p>⸻</p>
-<ol start="2" type="1">
-<li>Adding Predictors • Adding number of bathrooms increased R² slightly (to 0.14). • Demonstrated diminishing returns from structural-only models. • Emphasized the need for spatial variables to capture “location, location, location.”</li>
-</ol>
-<p>⸻</p>
-<ol start="3" type="1">
-<li>Introducing Spatial Data • Converted tabular data to spatial (sf) format using coordinates. • Transformed CRS from EPSG:4326 to MA State Plane for accurate distance measures. • Joined parcels with neighborhood polygons using st_join(). • Visualized median prices by neighborhood, showing clear spatial clustering: • Back Bay, Beacon Hill, South End highest. • Dorchester, Roxbury, Mattapan lowest.</li>
-</ol>
-<p>⸻</p>
-<ol start="4" type="1">
-<li>Regression with Categorical (Dummy) Variables • Used neighborhood name (name) as a factor. • R automatically creates dummy variables for each neighborhood. • One neighborhood (Allston) becomes the reference category. • Model interpretation: • Positive coefficient → more expensive than Allston. • Negative coefficient → cheaper than Allston. • Example: identical houses differ by millions between Back Bay ($8.5M) and Roxbury ($0.33M).</li>
-</ol>
-<p>⸻</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> dat <span class="sc">%&gt;%</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">interval60 =</span> <span class="fu">floor_date</span>(<span class="fu">ymd_hms</span>(start_time), <span class="at">unit =</span> <span class="st">&quot;hour&quot;</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>•   Alternative: 15-minute bins (more granular but sparser data).</code></pre>
 <ol start="5" type="1">
-<li>Interaction Effects • Question: does square footage matter equally in all areas? • Built interaction models: • Model 1 (no interaction): same slope everywhere. • Model 2 (interaction): slope differs by neighborhood wealth. • Defined “wealthy neighborhoods” = Back Bay, Beacon Hill, South End, Bay Village. • Result: • Wealthy areas have much steeper slopes (≈ $985/sq ft vs. $95 in others). • Confirms Luxury Premium Hypothesis — larger homes in wealthy areas command disproportionate premiums.</li>
+<li>Extracting Time Features</li>
 </ol>
-<p>⸻</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> dat <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">week =</span> <span class="fu">week</span>(interval60),            <span class="co"># Week of year (1-52)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">dotw =</span> <span class="fu">wday</span>(interval60, <span class="at">label=</span><span class="cn">TRUE</span>), <span class="co"># Day of week (Mon, Tue, ...)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">hour =</span> <span class="fu">hour</span>(interval60)             <span class="co"># Hour of day (0-23)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>•   These become predictors: Rush hour indicator, weekend indicator, holiday effects.</code></pre>
 <ol start="6" type="1">
-<li>Conceptual Takeaways • Spatial features and fixed effects are critical to avoid biased estimates. • Spatial autocorrelation violates OLS independence assumptions. • Remedies: include location terms, fixed effects, or spatial regression models. • Understanding geography improves both predictive accuracy and policy relevance in housing analytics.</li>
+<li><p>Temporal Lags • Core idea: Past demand predicts future demand. • Spatial features (Week 6): Crimes within 500ft, distance to downtown. • Temporal features (This week): Demand 1 hour ago, 2 hours ago, yesterday (24 hours ago). • Intuition: If there were 15 trips at 8 AM, there will probably be ~15 trips at 9 AM.</p></li>
+<li><p>Creating Lag Variables</p></li>
 </ol>
-<p>⸻</p>
-<p>Key Terms: baseline model, dummy variable, fixed effects, interaction term, spatial join, CRS transformation, hedonic model, Tobler’s First Law, spatial autocorrelation.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>study.panel <span class="ot">&lt;-</span> study.panel <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(from_station_id, interval60) <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(from_station_id) <span class="sc">%&gt;%</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">lag1Hour =</span> <span class="fu">lag</span>(Trip_Count, <span class="dv">1</span>),    <span class="co"># Previous hour</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">lag2Hours =</span> <span class="fu">lag</span>(Trip_Count, <span class="dv">2</span>),   <span class="co"># 2 hours ago</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">lag12Hours =</span> <span class="fu">lag</span>(Trip_Count, <span class="dv">12</span>), <span class="co"># 12 hours ago</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">lag1day =</span> <span class="fu">lag</span>(Trip_Count, <span class="dv">24</span>)     <span class="co"># Yesterday same time</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>•   Important: Lags are calculated WITHIN each station.</code></pre>
+<ol start="8" type="1">
+<li><p>Temporal Leakage — Critical Concept • Problem: Using future data to predict the past = cheating! • WRONG: Train on Weeks 3-4, test on Weeks 1-2 (predicting past using future). • CORRECT: Train on Weeks 1-2, test on Weeks 3-4 (predicting future using past). • Real-world scenario: If it’s May 15, you can only use data from May 1-14 to predict May 16+.</p></li>
+<li><p>Temporal Train/Test Split</p></li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train on early period</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> study.panel <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(week <span class="sc">&lt;</span> <span class="dv">19</span>)  <span class="co"># Weeks 1-2 of May</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Test on later period</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> study.panel <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(week <span class="sc">&gt;=</span> <span class="dv">19</span>) <span class="co"># Weeks 3-4 of May</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>•   This mirrors operational deployment: Predict tomorrow using yesterday&#39;s patterns.</code></pre>
+<ol start="10" type="1">
+<li><p>Comparison: Spatial CV vs Temporal Validation • Week 7 (Spatial CV): Prevents spatial leakage, holds out entire neighborhoods, ensures model generalizes to new areas. • This week (Temporal CV): Prevents temporal leakage, holds out future time periods, ensures model generalizes to future. • Both are about out-of-sample generalization!</p></li>
+<li><p>Model Progression Strategy • Model 1 (Baseline): Time + Weather only (hour, day of week, temperature, precipitation). • Model 2: + Temporal lags (lag1Hour, lag3Hours, lag1day). • Model 3: + Spatial features (demographics, location characteristics). • Model 4: + Station fixed effects (control for station-specific baselines). • Model 5: + Holiday effects (Memorial Day weekend). • Goal: See which features improve prediction accuracy.</p></li>
+<li><p>Weather Data Integration • Weather strongly affects bike share demand. • Features: Temperature, precipitation, wind speed. • Challenge: Match weather data to correct time intervals.</p></li>
+<li><p>Evaluating Model Performance • RMSE (Root Mean Square Error): Measures prediction error. • MAE (Mean Absolute Error): Average absolute prediction error. • Evaluate by: Station, time of day, day of week — to identify where model performs poorly.</p></li>
+<li><p>Key Takeaways • Panel data lets us capture both station differences AND time patterns. • Temporal lags are powerful predictors (past behavior predicts future). • Never use future data to predict the past — temporal validation is critical. • Station fixed effects capture station-specific baseline demand. • Weather and time features together explain much of demand variation.</p></li>
+</ol>
 
 
 

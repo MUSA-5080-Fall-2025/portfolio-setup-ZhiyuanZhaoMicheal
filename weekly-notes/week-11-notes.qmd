@@ -1,0 +1,113 @@
+---
+title: "Week 11 Notes - Space-Time Prediction"
+date: "2025-11-17"
+---
+
+
+Week 11 Summary — Space-Time Prediction (Bike Share Demand Forecasting)
+
+1. The Space-Time Challenge
+	•	Real-world problem: Bike rebalancing — how to get bikes where they'll be needed BEFORE demand hits.
+	•	Operational question: "At 6:00 AM, which stations will run out of bikes by 8:00 AM?"
+	•	Must predict demand in BOTH space AND time.
+
+2. What Makes This Different
+	•	Previous weeks (5-7): Cross-sectional prediction (predict house prices at one point in time).
+	•	This week: Panel data — same stations observed over time.
+	•	New features: Temporal lags (what happened last hour?), space-time interaction.
+
+3. Panel Data Structure
+	•	Definition: Data that follows the same units over multiple time periods.
+	•	Cross-sectional: Each row = one observation (one snapshot in time).
+	•	Panel: Each row = unit × time period (repeated observations).
+	•	Example: Station × hour combinations.
+	•	Key insight: Can see how demand changes WITHIN stations over time.
+
+4. Binning Data into Time Intervals
+	•	Why bin? Raw trip data has unique timestamps; need uniform intervals for aggregation.
+	•	Hourly binning: All trips between 8:00-8:59 AM → "08:00" bin.
+```r
+dat <- dat %>%
+  mutate(interval60 = floor_date(ymd_hms(start_time), unit = "hour"))
+```
+	•	Alternative: 15-minute bins (more granular but sparser data).
+
+5. Extracting Time Features
+```r
+dat <- dat %>%
+  mutate(
+    week = week(interval60),            # Week of year (1-52)
+    dotw = wday(interval60, label=TRUE), # Day of week (Mon, Tue, ...)
+    hour = hour(interval60)             # Hour of day (0-23)
+  )
+```
+	•	These become predictors: Rush hour indicator, weekend indicator, holiday effects.
+
+6. Temporal Lags
+	•	Core idea: Past demand predicts future demand.
+	•	Spatial features (Week 6): Crimes within 500ft, distance to downtown.
+	•	Temporal features (This week): Demand 1 hour ago, 2 hours ago, yesterday (24 hours ago).
+	•	Intuition: If there were 15 trips at 8 AM, there will probably be ~15 trips at 9 AM.
+
+7. Creating Lag Variables
+```r
+study.panel <- study.panel %>%
+  arrange(from_station_id, interval60) %>%
+  group_by(from_station_id) %>%
+  mutate(
+    lag1Hour = lag(Trip_Count, 1),    # Previous hour
+    lag2Hours = lag(Trip_Count, 2),   # 2 hours ago
+    lag12Hours = lag(Trip_Count, 12), # 12 hours ago
+    lag1day = lag(Trip_Count, 24)     # Yesterday same time
+  ) %>%
+  ungroup()
+```
+	•	Important: Lags are calculated WITHIN each station.
+
+8. Temporal Leakage — Critical Concept
+	•	Problem: Using future data to predict the past = cheating!
+	•	WRONG: Train on Weeks 3-4, test on Weeks 1-2 (predicting past using future).
+	•	CORRECT: Train on Weeks 1-2, test on Weeks 3-4 (predicting future using past).
+	•	Real-world scenario: If it's May 15, you can only use data from May 1-14 to predict May 16+.
+
+9. Temporal Train/Test Split
+```r
+# Train on early period
+train <- study.panel %>%
+  filter(week < 19)  # Weeks 1-2 of May
+
+# Test on later period
+test <- study.panel %>%
+  filter(week >= 19) # Weeks 3-4 of May
+```
+	•	This mirrors operational deployment: Predict tomorrow using yesterday's patterns.
+
+10. Comparison: Spatial CV vs Temporal Validation
+	•	Week 7 (Spatial CV): Prevents spatial leakage, holds out entire neighborhoods, ensures model generalizes to new areas.
+	•	This week (Temporal CV): Prevents temporal leakage, holds out future time periods, ensures model generalizes to future.
+	•	Both are about out-of-sample generalization!
+
+11. Model Progression Strategy
+	•	Model 1 (Baseline): Time + Weather only (hour, day of week, temperature, precipitation).
+	•	Model 2: + Temporal lags (lag1Hour, lag3Hours, lag1day).
+	•	Model 3: + Spatial features (demographics, location characteristics).
+	•	Model 4: + Station fixed effects (control for station-specific baselines).
+	•	Model 5: + Holiday effects (Memorial Day weekend).
+	•	Goal: See which features improve prediction accuracy.
+
+12. Weather Data Integration
+	•	Weather strongly affects bike share demand.
+	•	Features: Temperature, precipitation, wind speed.
+	•	Challenge: Match weather data to correct time intervals.
+
+13. Evaluating Model Performance
+	•	RMSE (Root Mean Square Error): Measures prediction error.
+	•	MAE (Mean Absolute Error): Average absolute prediction error.
+	•	Evaluate by: Station, time of day, day of week — to identify where model performs poorly.
+
+14. Key Takeaways
+	•	Panel data lets us capture both station differences AND time patterns.
+	•	Temporal lags are powerful predictors (past behavior predicts future).
+	•	Never use future data to predict the past — temporal validation is critical.
+	•	Station fixed effects capture station-specific baseline demand.
+	•	Weather and time features together explain much of demand variation.

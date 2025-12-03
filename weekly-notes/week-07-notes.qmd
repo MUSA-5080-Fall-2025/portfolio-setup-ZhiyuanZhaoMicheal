@@ -1,0 +1,91 @@
+---
+title: "Week 7 Notes - Model Diagnostics & Spatial Autocorrelation"
+date: "2025-10-21"
+---
+
+
+Week 7 Summary — Model Diagnostics & Spatial Autocorrelation
+
+1. Understanding Model Errors
+	•	Prediction error: $e_i = \hat{y}_i - y_i$ (predicted - actual).
+	•	Random errors (good): No systematic pattern, scattered across space, prediction equally good everywhere.
+	•	Clustered errors (bad): Spatial pattern visible, under/over-predict in certain areas, model misses something about location.
+
+2. Tobler's First Law of Geography
+	•	"Everything is related to everything else, but near things are more related than distant things."
+	•	Applied to house prices: Nearby houses have similar prices, nearby neighborhoods have similar characteristics.
+	•	Applied to errors: If nearby houses have similar errors, our model is missing a spatial pattern — need more spatial features!
+
+3. Moran's I
+	•	Definition: Measures spatial autocorrelation, ranges from -1 to +1.
+	•	Interpretation:
+	•	+1 = Perfect positive correlation (clustering)
+	•	0 = Random spatial pattern
+	•	-1 = Perfect negative correlation (dispersion)
+	•	Core intuition: "When I'm above/below average, are my neighbors also above/below average?"
+	•	Calculation logic:
+	•	(xᵢ - x̄) = How far am I from the mean?
+	•	(xⱼ - x̄) = How far is my neighbor from the mean?
+	•	Multiply them: Both same sign → positive product (similar); opposite signs → negative product (dissimilar).
+	•	Sum across all neighbor pairs and normalize.
+
+4. Defining "Neighbors"
+	•	Contiguity: Polygons that share a border (Queen vs Rook).
+	•	Distance: All points within X meters (fixed threshold).
+	•	k-Nearest: Closest k points (adaptive distance).
+	•	For point data (houses), use k-nearest neighbors.
+
+5. Spatial Lag
+	•	Definition: Average value of neighbors.
+	•	Purpose: Used to test whether errors are spatially clustered.
+	•	R code example:
+```r
+library(spdep)
+coords <- st_coordinates(data_sf)
+neighbors <- knn2nb(knearneigh(coords, k=5))
+weights <- nb2listw(neighbors, style="W")
+data$error_lag <- lag.listw(weights, data$error)
+```
+
+6. Computing and Interpreting Moran's I
+	•	Calculation: Use Monte Carlo permutation test (moran.mc).
+```r
+moran_test <- moran.mc(data$error, weights, nsim = 999)
+moran_test$statistic  # Moran's I value
+moran_test$p.value    # Significance test
+```
+	•	Decision framework:
+	•	I > 0 and p < 0.05 → Significant clustering, model needs improvement.
+	•	I ≈ 0 → Random pattern (good!), model captures spatial relationships.
+	•	I < 0 → Dispersion (rare with errors).
+
+7. What To Do If Moran's I Is High
+	•	Add more spatial features: Try different buffer sizes, include more amenities/disamenities, create neighborhood-specific variables.
+	•	Try spatial fixed effects: Neighborhood dummies, grid cell dummies.
+	•	Consider spatial regression models (advanced): Spatial lag model, spatial error model.
+
+8. Spatial Lag Models vs Predictive Spatial Features
+	•	Spatial Econometrics Models:
+	•	Purpose: Causal inference with spatial spillovers, understanding neighbor effects, correcting standard errors.
+	•	When to use: Academic research on spillover effects, peer influence, regional economics.
+	•	Our Approach (Predictive Spatial Features):
+	•	Purpose: Out-of-sample prediction, forecasting new observations, applied machine learning.
+	•	Advantages: Generalizes to new areas, avoids data leakage, no circular logic.
+	•	Key distinction: We model proximity in X (predictors), not dependence in Y (outcome). Use "near low crime areas" instead of "near expensive houses."
+
+9. Why Not Spatial Lag Models for Prediction?
+	•	Simultaneity problem: Including WY (neighbor prices) creates circular logic — my price affects neighbors, neighbors affect me.
+	•	Prediction paradox: Need neighbors' prices to predict my price, but for new developments those prices don't exist yet.
+	•	Data leakage in CV: Spatial lag "leaks" information from test set, giving artificially good performance.
+	•	Bottom line: Match method to purpose — inference → spatial lag/error models; prediction → spatial features.
+
+10. Biased vs Inconsistent Estimators
+	•	Biased: E[β̂] ≠ β; on average, estimates are systematically wrong; more data doesn't fix it.
+	•	Inconsistent: Doesn't converge to true value as n → ∞; even with infinite data, you won't get the right answer.
+	•	OLS with spatial lag models produces estimates that are both biased and inconsistent.
+
+11. Key Takeaways
+	•	Spatial autocorrelation in errors indicates model misspecification.
+	•	Moran's I is a diagnostic tool: Global I shows overall clustering; maps of residuals give clues to what you might be missing.
+	•	Iterative improvement: Diagnose → Engineer features → Re-test → Repeat.
+	•	Document what you try!

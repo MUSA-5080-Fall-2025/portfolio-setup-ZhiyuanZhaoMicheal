@@ -1,0 +1,101 @@
+---
+title: "Week 10 Notes - Logistic Regression for Binary Outcomes"
+date: "2025-11-10"
+---
+
+
+Week 10 Summary — Logistic Regression for Binary Outcomes
+
+1. Why Logistic Regression?
+	•	Binary outcomes: Yes/No, 0/1 (e.g., spam/not spam, default/no default).
+	•	Problems with linear regression for binary outcomes:
+	•	Predictions can be > 1 or < 0 (invalid probabilities).
+	•	Assumes constant effect across range (unrealistic).
+	•	Violates regression assumptions (errors aren't normal).
+	•	Solution: Logistic regression constrains predictions between 0 and 1.
+
+2. The Logistic Function
+	•	Formula: p(X) = 1 / (1 + e^-(β₀ + β₁X₁ + ... + βₖXₖ))
+	•	Produces S-shaped curve bounded between 0 and 1.
+	•	Predicts probability of outcome = 1.
+
+3. The Logit Transformation
+	•	Odds: p / (1-p)
+	•	Log-Odds (Logit): ln(p / (1-p)) = β₀ + β₁X₁ + β₂X₂ + ...
+	•	Coefficients are in log-odds scale.
+	•	Exponentiate to get Odds Ratios: e^β
+	•	OR > 1: Predictor increases odds of outcome.
+	•	OR < 1: Predictor decreases odds of outcome.
+	•	OR = 1: No effect.
+
+4. Fitting Logistic Regression in R
+```r
+model <- glm(
+  outcome ~ predictor1 + predictor2,
+  data = dataset,
+  family = "binomial"  # Specifies logistic regression
+)
+```
+	•	Use type = "response" in predict() to get probabilities.
+
+5. The Threshold Challenge
+	•	Model outputs probabilities, but we need binary decisions.
+	•	Must choose a threshold (cutoff) to classify.
+	•	Threshold = 0.5 is common default, but often not optimal.
+	•	Optimal threshold depends on costs of false positives vs false negatives.
+
+6. The Confusion Matrix
+	•	Four possible outcomes:
+	•	True Positive (TP): Predicted Yes, Actually Yes ✓
+	•	True Negative (TN): Predicted No, Actually No ✓
+	•	False Positive (FP): Predicted Yes, Actually No (Type I error)
+	•	False Negative (FN): Predicted No, Actually Yes (Type II error)
+
+7. Key Metrics from Confusion Matrix
+	•	Sensitivity (Recall, True Positive Rate): TP / (TP + FN) — Of all actual positives, how many did we catch?
+	•	Specificity (True Negative Rate): TN / (TN + FP) — Of all actual negatives, how many did we correctly identify?
+	•	Precision (Positive Predictive Value): TP / (TP + FP) — Of all predicted positives, how many were correct?
+	•	Accuracy: (TP + TN) / Total — Overall correctness (can be misleading with imbalanced data).
+
+8. The Threshold Trade-off
+	•	Lower threshold: More positives predicted → Higher sensitivity, lower specificity.
+	•	Higher threshold: Fewer positives predicted → Lower sensitivity, higher specificity.
+	•	No free lunch: Improving one metric often worsens another.
+
+9. ROC Curves
+	•	ROC = Receiver Operating Characteristic.
+	•	Plots True Positive Rate (Sensitivity) vs False Positive Rate (1 - Specificity) at all thresholds.
+	•	Diagonal line = random guessing.
+	•	Top-left corner = perfect prediction.
+	•	AUC (Area Under the Curve): Summarizes overall model performance.
+	•	AUC = 1.0: Perfect classifier.
+	•	AUC = 0.9-1.0: Excellent.
+	•	AUC = 0.8-0.9: Good.
+	•	AUC = 0.7-0.8: Acceptable.
+	•	AUC = 0.5: Random guessing.
+
+10. Creating ROC Curves in R
+```r
+library(pROC)
+roc_obj <- roc(data$actual, data$predicted_prob)
+ggroc(roc_obj)
+auc(roc_obj)  # Get AUC value
+```
+
+11. Policy Scenarios for Threshold Selection
+	•	Rare, deadly disease screening: Prioritize high sensitivity (don't miss cases), accept more false positives.
+	•	Limited intervention slots: Prioritize high precision (use resources efficiently), accept missing some cases.
+	•	Threshold choice depends on: Cost of false positives vs cost of false negatives.
+
+12. Equity Considerations
+	•	A model can be "accurate" overall but perform very differently across groups.
+	•	Disparate Impact: Different error rates for different demographic groups.
+	•	Must evaluate: Sensitivity, specificity, and false positive rates BY GROUP.
+	•	Fairness metrics may conflict with each other (impossibility theorem).
+
+13. Key Takeaways
+	•	Logistic regression produces probabilities; WE choose the threshold.
+	•	AUC tells us discrimination ability but not which threshold to use.
+	•	Cost-benefit analysis should drive threshold selection.
+	•	Always evaluate model performance across different groups.
+	•	Technical accuracy ≠ Ethical deployment.
