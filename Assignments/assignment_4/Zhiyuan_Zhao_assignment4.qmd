@@ -2,7 +2,7 @@
 title: "Spatial Predictive Analysis: Predicting Burglaries Using Sanitation Complaints"
 subtitle: "MUSA 5080 - Fall 2025"
 author: "Zhiyuan Zhao"
-date: today
+date: 11/2/2025
 format:
   html:
     code-fold: true
