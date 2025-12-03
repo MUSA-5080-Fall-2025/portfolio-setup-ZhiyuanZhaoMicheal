@@ -544,7 +544,13 @@ model_poisson <- glm(
 )
 
 # Summary
-summary(model_poisson)
+broom::tidy(model_poisson) %>%
+  mutate(across(where(is.numeric), ~round(., 4))) %>%
+  kable(
+    caption = "Poisson Regression Coefficients",
+    col.names = c("Variable", "Estimate", "Std. Error", "Z-value", "P-value")
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 
 ```
 
@@ -570,8 +576,14 @@ model_nb <- glm.nb(
   data = fishnet_model
 )
 
-# Summary
-summary(model_nb)
+# Summary as table
+broom::tidy(model_nb) %>%
+  mutate(across(where(is.numeric), ~round(., 4))) %>%
+  kable(
+    caption = "Negative Binomial Regression Coefficients",
+    col.names = c("Variable", "Estimate", "Std. Error", "Z-value", "P-value")
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
 
 ```
 
