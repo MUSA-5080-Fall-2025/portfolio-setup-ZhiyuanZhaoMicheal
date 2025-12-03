@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Zhiyuan Zhao">
-<meta name="dcterms.date" content="2025-11-26">
+<meta name="dcterms.date" content="2025-12-03">
 
 <title>Spatial Predictive Analysis: Predicting Burglaries Using Sanitation Complaints – Zhiyuan - MUSA 5080 Portfolio</title>
 <style>
@@ -4272,7 +4272,7 @@ border: 0;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">November 26, 2025</p>
+      <p class="date">December 3, 2025</p>
     </div>
   </div>
   
@@ -4304,7 +4304,7 @@ border: 0;
 <section id="setup" class="level1">
 <h1>Setup</h1>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load required packages</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)      <span class="co"># Data manipulation</span></span>
@@ -4348,7 +4348,7 @@ border: 0;
 <h2 class="anchored" data-anchor-id="load-chicago-spatial-boundaries">1.1 Load Chicago Spatial Boundaries</h2>
 <p>In this step, I load the administrative boundaries of Chicago. These boundaries are essential for spatial analysis as they provide the geographic reference framework. I use the Illinois State Plane coordinate system (ESRI:102271), which minimizes distortion in the Chicago area and uses feet as the unit of measurement.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load police districts (used for spatial cross-validation)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>policeDistricts <span class="ot">&lt;-</span> </span>
@@ -4375,7 +4375,7 @@ border: 0;
 <h2 class="anchored" data-anchor-id="load-2017-burglary-data">1.2 Load 2017 Burglary Data</h2>
 <p>In this step, I load the 2017 burglary data. These are the crimes we want to predict using sanitation complaint features.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load burglaries from local shapefile</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>burglaries_2017 <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">&quot;data/burglaries.shp&quot;</span>) <span class="sc">%&gt;%</span></span>
@@ -4395,7 +4395,7 @@ border: 0;
 <h2 class="anchored" data-anchor-id="visualize-burglary-point-data">1.3 Visualize Burglary Point Data</h2>
 <p>In this step, I create two visualizations: a point map showing the location of each burglary, and a density plot showing the spatial concentration of burglaries.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Point map</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
@@ -4457,7 +4457,7 @@ border: 0;
 </ul>
 <p>I use a 500m × 500m grid, which provides a good balance between capturing spatial variation and maintaining sufficient sample sizes.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create 500m x 500m grid</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>fishnet <span class="ot">&lt;-</span> <span class="fu">st_make_grid</span>(</span>
@@ -4479,7 +4479,7 @@ border: 0;
 <h2 class="anchored" data-anchor-id="aggregate-burglaries-to-grid">2.2 Aggregate Burglaries to Grid</h2>
 <p>In this step, I count the number of burglaries in each grid cell. This converts point data into count data that can be used for regression modeling.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Spatial join</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>burglaries_fishnet <span class="ot">&lt;-</span> <span class="fu">st_join</span>(burglaries_2017, fishnet, <span class="at">join =</span> st_within) <span class="sc">%&gt;%</span></span>
@@ -4497,7 +4497,7 @@ border: 0;
 <section id="visualize-aggregated-counts" class="level2">
 <h2 class="anchored" data-anchor-id="visualize-aggregated-counts">2.3 Visualize Aggregated Counts</h2>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize aggregated counts</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
@@ -4541,7 +4541,7 @@ border: 0;
 <section id="load-2017-sanitation-complaints" class="level2">
 <h2 class="anchored" data-anchor-id="load-2017-sanitation-complaints">3.2 Load 2017 Sanitation Complaints</h2>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load 2017 sanitation complaints from local CSV file</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>sanitation_2017 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(</span>
@@ -4565,7 +4565,7 @@ border: 0;
 <section id="visualize-relationship-between-sanitation-and-burglaries" class="level2">
 <h2 class="anchored" data-anchor-id="visualize-relationship-between-sanitation-and-burglaries">3.3 Visualize Relationship Between Sanitation and Burglaries</h2>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Aggregate sanitation complaints to fishnet</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>sanitation_fishnet <span class="ot">&lt;-</span> <span class="fu">st_join</span>(sanitation_2017, fishnet, <span class="at">join =</span> st_within) <span class="sc">%&gt;%</span></span>
@@ -4619,7 +4619,7 @@ border: 0;
 <h2 class="anchored" data-anchor-id="calculate-sanitation-complaint-features">3.4 Calculate Sanitation Complaint Features</h2>
 <p>Following the class example structure, we create three spatial features from sanitation complaints:</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Feature 1: Count of sanitation complaints per cell (already calculated)</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Feature 2: Mean distance to nearest 3 sanitation complaints</span></span>
@@ -4696,7 +4696,7 @@ border: 0;
 <section id="visualize-sanitation-hot-spots" class="level2">
 <h2 class="anchored" data-anchor-id="visualize-sanitation-hot-spots">3.5 Visualize Sanitation Hot Spots</h2>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> fishnet, <span class="fu">aes</span>(<span class="at">fill =</span> sanitation_cluster), <span class="at">color =</span> <span class="cn">NA</span>) <span class="sc">+</span></span>
@@ -4732,7 +4732,7 @@ border: 0;
 <h1>Part 4: Kernel Density Estimation Baseline</h1>
 <p>Before building complex models, we create a simple baseline using Kernel Density Estimation (KDE) based on burglaries. This represents the “null hypothesis” - burglaries happen where they happened before, with no other information.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert burglaries to ppp object for spatstat</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>burglaries_ppp <span class="ot">&lt;-</span> <span class="fu">as.ppp</span>(</span>
@@ -4784,7 +4784,7 @@ border: 0;
 <h2 class="anchored" data-anchor-id="prepare-modeling-data">5.1 Prepare Modeling Data</h2>
 <p>First, we need to join police districts for spatial cross-validation and prepare our modeling dataset.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove any existing District columns to avoid duplicates</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>fishnet <span class="ot">&lt;-</span> fishnet <span class="sc">%&gt;%</span></span>
@@ -4802,7 +4802,7 @@ border: 0;
 </details>
 </div>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop geometry and select variables</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>fishnet_model <span class="ot">&lt;-</span> fishnet_model <span class="sc">%&gt;%</span></span>
@@ -4830,7 +4830,7 @@ border: 0;
 <h2 class="anchored" data-anchor-id="poisson-regression">5.2 Poisson Regression</h2>
 <p>Poisson regression is the standard model for count data. We’ll use three sanitation features to predict burglaries, following the class example structure.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit Poisson regression with three features</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Use log transformation for distance variables to improve numerical stability</span></span>
@@ -4887,7 +4887,7 @@ Number of Fisher Scoring iterations: 5</code></pre>
 <h2 class="anchored" data-anchor-id="negative-binomial-regression">5.3 Negative Binomial Regression</h2>
 <p>Negative Binomial regression relaxes the Poisson model’s assumption that mean equals variance, allowing for overdispersion (variance &gt; mean), which is common in crime data.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit Negative Binomial regression with three features</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>model_nb <span class="ot">&lt;-</span> <span class="fu">glm.nb</span>(</span>
@@ -4949,7 +4949,7 @@ Number of Fisher Scoring iterations: 1
 <section id="model-comparison" class="level2">
 <h2 class="anchored" data-anchor-id="model-comparison">5.4 Model Comparison</h2>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare AIC</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>comparison_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
@@ -4997,7 +4997,7 @@ Number of Fisher Scoring iterations: 1
 <h2 class="anchored" data-anchor-id="why-spatial-cross-validation">6.1 Why Spatial Cross-Validation?</h2>
 <p>Standard cross-validation randomly splits data. But with spatial data, this means training on cells right next to test cells (information leakage!). Leave-One-Group-Out (LOGO) cross-validation trains on all districts except one, then tests on the held-out district. This provides a more realistic assessment of how the model performs in new areas.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get unique districts</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>districts <span class="ot">&lt;-</span> <span class="fu">unique</span>(fishnet_model<span class="sc">$</span>District)</span>
@@ -5046,7 +5046,7 @@ Number of Fisher Scoring iterations: 1
 <section id="cross-validation-results" class="level2">
 <h2 class="anchored" data-anchor-id="cross-validation-results">6.2 Cross-Validation Results</h2>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Show results</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>cv_results <span class="sc">%&gt;%</span></span>
@@ -5245,7 +5245,7 @@ Number of Fisher Scoring iterations: 1
 <h2 class="anchored" data-anchor-id="generate-final-predictions">7.1 Generate Final Predictions</h2>
 <p>In this step, I fit the final model on all 2017 data and generate predictions. I also compare these predictions to the simple KDE baseline.</p>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit final model on all data - three-feature model</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>final_model <span class="ot">&lt;-</span> <span class="fu">glm.nb</span>(</span>
@@ -5275,7 +5275,7 @@ Number of Fisher Scoring iterations: 1
 <section id="compare-model-vs.-kde-baseline" class="level2">
 <h2 class="anchored" data-anchor-id="compare-model-vs.-kde-baseline">7.2 Compare Model vs. KDE Baseline</h2>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create three maps</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
@@ -5313,7 +5313,7 @@ Number of Fisher Scoring iterations: 1
 <section id="performance-metrics-comparison" class="level2">
 <h2 class="anchored" data-anchor-id="performance-metrics-comparison">7.3 Performance Metrics Comparison</h2>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate performance metrics</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>comparison <span class="ot">&lt;-</span> fishnet <span class="sc">%&gt;%</span></span>
@@ -5367,7 +5367,7 @@ Number of Fisher Scoring iterations: 1
 <section id="spatial-distribution-of-prediction-errors" class="level2">
 <h2 class="anchored" data-anchor-id="spatial-distribution-of-prediction-errors">7.4 Spatial Distribution of Prediction Errors</h2>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate errors</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>fishnet <span class="ot">&lt;-</span> fishnet <span class="sc">%&gt;%</span></span>
@@ -5414,7 +5414,7 @@ Number of Fisher Scoring iterations: 1
 <section id="model-coefficients-summary" class="level2">
 <h2 class="anchored" data-anchor-id="model-coefficients-summary">7.5 Model Coefficients Summary</h2>
 <div class="cell">
-<details open class="code-fold">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create summary table with formatted p-values</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>model_summary <span class="ot">&lt;-</span> broom<span class="sc">::</span><span class="fu">tidy</span>(final_model, <span class="at">exponentiate =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
@@ -6020,7 +6020,7 @@ Number of Fisher Scoring iterations: 1
 <span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> today</span></span>
 <span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
 <span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: show</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
 <span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
 <span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
 <span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="co">    toc-depth: 3</span></span>
