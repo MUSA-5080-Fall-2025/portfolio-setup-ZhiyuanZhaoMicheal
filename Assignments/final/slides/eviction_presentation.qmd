@@ -43,6 +43,7 @@ If we can identify high-risk areas **before** evictions happen, we can:
 
 ## What Data Did We Use?
 
+::: {style="font-size: 0.5em;"}
 :::: {.columns}
 
 ::: {.column width="33%"}
@@ -51,26 +52,36 @@ If we can identify high-risk areas **before** evictions happen, we can:
 - Monthly court filings
 - All 408 Census tracts
 - 2020 - 2025
+- Source: Eviction Lab
 :::
 
 
 ::: {.column width="33%"}
-**Neighborhood Data**
+**Neighborhood Data (Census)**
 
 - Poverty rate
 - % Renters
 - Median income
+- Unemployment rate
+- % Rent burdened (>30% income)
+- Vacancy rate
+- % Old housing (pre-1970)
+- % College educated
 :::
 
 ::: {.column width="33%"}
 **311 Complaints**
 
-- No heat
+- No heat / utilities
 - Dangerous building
 - Infestations
+- Maintenance issues
+- Building code violations
+- Aggregated monthly by tract
 :::
 
 ::::
+:::
 
 **Why 311?** Early warning sign — tenants report problems before eviction happens
 

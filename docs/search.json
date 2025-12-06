@@ -235,7 +235,7 @@
     "href": "Assignments/final/slides/eviction_presentation.html#what-data-did-we-use",
     "title": "Predicting Evictions in Philadelphia",
     "section": "What Data Did We Use?",
-    "text": "What Data Did We Use?\n\n\nEviction Records\n\nMonthly court filings\nAll 408 Census tracts\n2020 - 2025\n\n\nNeighborhood Data\n\nPoverty rate\n% Renters\nMedian income\n\n\n311 Complaints\n\nNo heat\nDangerous building\nInfestations\n\n\nWhy 311? Early warning sign — tenants report problems before eviction happens"
+    "text": "What Data Did We Use?\n\n\n\nEviction Records\n\nMonthly court filings\nAll 408 Census tracts\n2020 - 2025\nSource: Eviction Lab\n\n\nNeighborhood Data (Census)\n\nPoverty rate\n% Renters\nMedian income\nUnemployment rate\n% Rent burdened (&gt;30% income)\nVacancy rate\n% Old housing (pre-1970)\n% College educated\n\n\n311 Complaints\n\nNo heat / utilities\nDangerous building\nInfestations\nMaintenance issues\nBuilding code violations\nAggregated monthly by tract\n\n\n\nWhy 311? Early warning sign — tenants report problems before eviction happens"
   },
   {
     "objectID": "Assignments/final/slides/eviction_presentation.html#why-monthly-data",
