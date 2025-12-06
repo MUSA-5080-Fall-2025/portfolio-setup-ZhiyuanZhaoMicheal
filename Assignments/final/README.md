@@ -49,13 +49,10 @@ Philadelphia experiences over 1,000 eviction filings per month, ranking among th
 ## Repository Structure
 
 ```
-├── data/
-│   ├── raw/                    # Original downloaded data (not tracked in git)
-│   └── processed/              # Cleaned and merged datasets
-├── output/
-│   ├── figures/                # Generated visualizations
-│   └── tables/                 # Model results and summaries
-├── eviction_prediction_enhanced.qmd   # Main analysis document
+├── data/                              #Data used for this assignment
+├── output/                            #visualizations and tables
+├── slides/                            #presentation slides package
+├── final_Zhiyuan_Fan.qmd              # Main analysis document
 ├── eviction_presentation.qmd          # Presentation slides
 ├── README.md                          # This file
 └── .gitignore
