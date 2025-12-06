@@ -1,3 +1,5 @@
 /.quarto/
 **/*.quarto_ipynb
 Assignments/assignment_5/.RData
+Assignments/final/data/311/2020_public_cases_fc.dbf
+*.dbf

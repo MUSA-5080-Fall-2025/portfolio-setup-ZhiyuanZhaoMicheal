@@ -24,6 +24,14 @@ website:
           - href: weekly-notes/week-06-notes.qmd
           - text: Week 7
           - href: weekly-notes/week-07-notes.qmd
+          - text: Week 9
+          - href: weekly-notes/week-09-notes.qmd
+          - text: Week 10
+          - href: weekly-notes/week-10-notes.qmd
+          - text: Week 11
+          - href: weekly-notes/week-11-notes.qmd
+          - text: Week 12
+          - href: weekly-notes/week-12-notes.qmd
 
       - text: Assignments
         menu:
@@ -35,6 +43,8 @@ website:
             text: "Assignment 4: Spatial Predictive Analysis: Predicting Burglaries Using Sanitation Complaints"
           - href: Assignments/assignment_5/Zhiyuan_Zhao_assignment5.qmd
             text: "Assignment 5: Space-Time Prediction of Bike Share Demand: Philadelphia Indego - Q2 2024"
+          - href: Assignments/final/final_Zhiyuan_Fan.qmd
+            text: "Final: Philadelphia Eviction Prediction Model"
             
     
          
