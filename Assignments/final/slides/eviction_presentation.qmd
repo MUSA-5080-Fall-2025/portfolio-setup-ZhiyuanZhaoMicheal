@@ -118,19 +118,18 @@ Majority-Black neighborhoods have more outliers with very high eviction counts.
 
 ## We Tested Multiple Models
 
-::: {style="font-size: 0.7em;"}
+::: {style="font-size: 0.5em;"}
 | Model | Variables | McFadden's R² |
-|-------|-----------|---------------|
-| Baseline | Last month's evictions, 2 months ago | 0.14 |
-| Full | + Neighbor evictions, demographics, race | 0.23 |
-| Enhanced | + Hotspot features, month effects, interactions | 0.24 |
+|:---: |:--------------------: |:---: |
+| Baseline | Only past filings (Lag1, Lag2).| 0.14 |
+| Full | + ACS, 311, race, Spatial pressure (neighbors),CDC moratorium| 0.23 |
+| Enhanced | + Hotspot features, month effects, Poverty × Race,Spatial spillover × Renters % | 0.24 |
 :::
-
-**Neighbor evictions (spatial lag):** Average evictions in nearby tracts — captures "spillover effect"
-
-**Month effects:** Seasonal patterns (e.g., more evictions in Jan/Feb after holidays)
-
-**Interactions:** Effect of one variable depends on another (e.g., poverty has stronger effect in high-renter areas)
+- Modeling decisions are based on findings  
+- **Baseline** → looks only at recent history.
+- **Full** → incorporates neighborhood conditions.
+- **Enhanced** → captures disparities, seasonality, and hotspot dynamics.
+- **The Enhanced Model aligns most closely with how the city actually operates.**
 
 ## Model Performance on Test Set
 

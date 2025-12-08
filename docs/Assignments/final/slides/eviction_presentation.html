@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.8.24">
 
   <meta name="author" content="Zhiyuan Zhao &amp; Fan Yang">
-  <meta name="dcterms.date" content="2025-12-06">
+  <meta name="dcterms.date" content="2025-12-07">
   <title>Zhiyuan - MUSA 5080 Portfolio – Predicting Evictions in Philadelphia</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -139,7 +139,7 @@ Zhiyuan Zhao &amp; Fan Yang
 </div>
 </div>
 
-  <p class="date">2025-12-06</p>
+  <p class="date">2025-12-07</p>
 </section>
 <section>
 <section id="the-problem" class="title-slide slide level1 center">
@@ -277,37 +277,47 @@ Zhiyuan Zhao &amp; Fan Yang
 </section>
 <section id="we-tested-multiple-models" class="slide level2">
 <h2>We Tested Multiple Models</h2>
-<div style="font-size: 0.7em;">
+<div style="font-size: 0.5em;">
 <table class="caption-top">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 68%">
+<col style="width: 15%">
+</colgroup>
 <thead>
 <tr class="header">
-<th>Model</th>
-<th>Variables</th>
-<th>McFadden’s R²</th>
+<th style="text-align: center;">Model</th>
+<th style="text-align: center;">Variables</th>
+<th style="text-align: center;">McFadden’s R²</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Baseline</td>
-<td>Last month’s evictions, 2 months ago</td>
-<td>0.14</td>
+<td style="text-align: center;">Baseline</td>
+<td style="text-align: center;">Only past filings (Lag1, Lag2).</td>
+<td style="text-align: center;">0.14</td>
 </tr>
 <tr class="even">
-<td>Full</td>
-<td>+ Neighbor evictions, demographics, race</td>
-<td>0.23</td>
+<td style="text-align: center;">Full</td>
+<td style="text-align: center;">+ ACS, 311, race, Spatial pressure (neighbors),CDC moratorium</td>
+<td style="text-align: center;">0.23</td>
 </tr>
 <tr class="odd">
-<td>Enhanced</td>
-<td>+ Hotspot features, month effects, interactions</td>
-<td>0.24</td>
+<td style="text-align: center;">Enhanced</td>
+<td style="text-align: center;">+ Hotspot features, month effects, Poverty × Race,Spatial spillover × Renters %</td>
+<td style="text-align: center;">0.24</td>
 </tr>
 </tbody>
 </table>
 </div>
-<p><strong>Neighbor evictions (spatial lag):</strong> Average evictions in nearby tracts — captures “spillover effect”</p>
-<p><strong>Month effects:</strong> Seasonal patterns (e.g., more evictions in Jan/Feb after holidays)</p>
-<p><strong>Interactions:</strong> Effect of one variable depends on another (e.g., poverty has stronger effect in high-renter areas)</p>
+<ul>
+<li>Modeling decisions are based on findings<br>
+</li>
+<li><strong>Baseline</strong> → looks only at recent history.</li>
+<li><strong>Full</strong> → incorporates neighborhood conditions.</li>
+<li><strong>Enhanced</strong> → captures disparities, seasonality, and hotspot dynamics.</li>
+<li><strong>The Enhanced Model aligns most closely with how the city actually operates.</strong></li>
+</ul>
 </section>
 <section id="model-performance-on-test-set" class="slide level2">
 <h2>Model Performance on Test Set</h2>

@@ -270,7 +270,7 @@
     "href": "Assignments/final/slides/eviction_presentation.html#we-tested-multiple-models",
     "title": "Predicting Evictions in Philadelphia",
     "section": "We Tested Multiple Models",
-    "text": "We Tested Multiple Models\n\n\n\n\nModel\nVariables\nMcFadden’s R²\n\n\n\n\nBaseline\nLast month’s evictions, 2 months ago\n0.14\n\n\nFull\n+ Neighbor evictions, demographics, race\n0.23\n\n\nEnhanced\n+ Hotspot features, month effects, interactions\n0.24\n\n\n\n\nNeighbor evictions (spatial lag): Average evictions in nearby tracts — captures “spillover effect”\nMonth effects: Seasonal patterns (e.g., more evictions in Jan/Feb after holidays)\nInteractions: Effect of one variable depends on another (e.g., poverty has stronger effect in high-renter areas)"
+    "text": "We Tested Multiple Models\n\n\n\n\n\n\n\n\n\nModel\nVariables\nMcFadden’s R²\n\n\n\n\nBaseline\nOnly past filings (Lag1, Lag2).\n0.14\n\n\nFull\n+ ACS, 311, race, Spatial pressure (neighbors),CDC moratorium\n0.23\n\n\nEnhanced\n+ Hotspot features, month effects, Poverty × Race,Spatial spillover × Renters %\n0.24\n\n\n\n\n\nModeling decisions are based on findings\n\nBaseline → looks only at recent history.\nFull → incorporates neighborhood conditions.\nEnhanced → captures disparities, seasonality, and hotspot dynamics.\nThe Enhanced Model aligns most closely with how the city actually operates."
   },
   {
     "objectID": "Assignments/final/slides/eviction_presentation.html#model-performance-on-test-set",
