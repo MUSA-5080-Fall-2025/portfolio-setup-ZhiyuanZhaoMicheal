@@ -44,7 +44,9 @@ website:
           - href: Assignments/assignment_5/Zhiyuan_Zhao_assignment5.qmd
             text: "Assignment 5: Space-Time Prediction of Bike Share Demand: Philadelphia Indego - Q2 2024"
           - href: Assignments/final/final_Zhiyuan_Fan.qmd
-            text: "Final: Philadelphia Eviction Prediction Model"
+            text: "Final: Philadelphia Eviction Prediction Model Appendix"
+          - href: Assignments/final/slides/eviction_presentation.html
+            text: "Final: Philadelphia Eviction Prediction Model Slides"
             
     
          
